@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 const pageTitles: Record<string, { title: string; description: string }> = {
   "/dashboard": {
@@ -29,6 +30,10 @@ const pageTitles: Record<string, { title: string; description: string }> = {
   "/credito": {
     title: "Crédito",
     description: "Planifica tu utilización de crédito",
+  },
+  "/configuracion": {
+    title: "Configuración",
+    description: "Ajustes de tu cuenta y preferencias",
   },
 }
 
@@ -63,6 +68,7 @@ export function AppHeader() {
           <span className="size-1.5 rounded-full bg-emerald-500" />
           Data actualizada hoy
         </Badge>
+        <ThemeToggle />
       </div>
     </header>
   )

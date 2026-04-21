@@ -114,8 +114,12 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Configuración">
-                  <Link href="#">
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === "/configuracion"}
+                  tooltip="Configuración"
+                >
+                  <Link href="/configuracion">
                     <Settings />
                     <span>Configuración</span>
                   </Link>

@@ -8,6 +8,7 @@ import {
   X,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 const navLinks = [
   { href: "/#herramientas", label: "Herramientas" },
@@ -43,6 +44,7 @@ export function Navbar() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
+          <ThemeToggle />
           <Button variant="ghost" size="sm" asChild>
             <Link href="/dashboard">Iniciar Sesión</Link>
           </Button>
