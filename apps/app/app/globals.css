@@ -1,0 +1,21 @@
+@import "../../../packages/ui/src/styles.css";
+@import "maplibre-gl/dist/maplibre-gl.css";
+
+@source "../../../packages/ui/src";
+
+/* MapLibre popup overrides para que combine con el diseño */
+.maplibregl-popup-content {
+  padding: 0;
+  border-radius: 14px;
+  box-shadow:
+    0 4px 6px rgb(16 31 26 / 0.06),
+    0 16px 40px -12px rgb(16 31 26 / 0.2);
+  background: var(--card);
+  color: var(--card-foreground);
+}
+.maplibregl-popup-tip {
+  border-top-color: var(--card);
+}
+.maplibregl-popup-close-button {
+  display: none;
+}

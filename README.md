@@ -1,21 +1,19 @@
-# Next.js template
+# Cancel Bienes Raíces
 
-This is a Next.js template with shadcn/ui.
+Plataforma de herramientas de inversión para Puerto Rico — comparables con data
+exclusiva de cash deals, calculadora de ROI, deal tracker, planner de crédito y
+un copiloto AI que hace el trabajo por ti.
 
-## Adding components
+Monorepo (Turborepo + pnpm):
 
-To add components to your app, run the following command:
+- **`apps/web`** — landing page → http://localhost:3002
+- **`apps/app`** — la plataforma → http://localhost:3003
+- **`packages/ui`** — design system
+- **`packages/data`** — mock data + tipos
 
 ```bash
-npx shadcn@latest add button
+pnpm install
+pnpm dev
 ```
 
-This will place the ui components in the `components` directory.
-
-## Using components
-
-To use the components in your app, import them as follows:
-
-```tsx
-import { Button } from "@/components/ui/button";
-```
+Ver [AGENTS.md](./AGENTS.md) para arquitectura y convenciones.
