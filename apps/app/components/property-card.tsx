@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation"
 import {
-  BadgeCheck,
   BedDouble,
   Bookmark,
   Calculator,
@@ -19,8 +18,9 @@ import {
   sourceMeta,
   type Property,
 } from "@cancel/data"
-import { Button, Card, CardContent, Tooltip, TooltipContent, TooltipTrigger, cn } from "@cancel/ui"
+import { Button, Card, CardContent, cn } from "@cancel/ui"
 
+import { SourceChip } from "@/components/source-chip"
 import { useAnalysisStore } from "@/lib/stores/analysis"
 import { usePipelineStore } from "@/lib/stores/pipeline"
 import { useSavedStore } from "@/lib/stores/saved"
@@ -40,42 +40,28 @@ export function PropertyCard({ property: p }: { property: Property }) {
     <Card
       className={cn(
         "group relative overflow-hidden transition-all hover:shadow-lift",
-        meta.exclusive && "border-primary/30"
+        meta.exclusive && "ring-cash/25"
       )}
     >
       {meta.exclusive && (
-        <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-primary/0 via-primary to-primary/0" />
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-cash/0 via-cash to-cash/0" />
       )}
       <CardContent className="p-4 sm:p-5">
-        {/* Header */}
-        <div className="flex items-start justify-between gap-3">
+        {/* Fuente + estado */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <SourceChip source={p.source} verified={p.verified} />
+          {isActive && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-info/30 bg-info-soft px-2 py-0.5 text-[10px] font-semibold text-info">
+              <span className="size-1.5 rounded-full bg-info animate-pulse-dot" aria-hidden />
+              En venta · {p.daysOnMarket}d
+            </span>
+          )}
+        </div>
+
+        {/* Dirección + precio */}
+        <div className="mt-2.5 flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span
-                    className={cn(
-                      "inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold",
-                      meta.exclusive
-                        ? "bg-primary/10 text-primary"
-                        : "bg-muted text-muted-foreground"
-                    )}
-                  >
-                    {meta.exclusive && <BadgeCheck className="size-3" />}
-                    {meta.label}
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent className="max-w-60 text-xs">
-                  {meta.description}
-                </TooltipContent>
-              </Tooltip>
-              {isActive && (
-                <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-semibold text-blue-600 dark:text-blue-400">
-                  En venta · {p.daysOnMarket}d
-                </span>
-              )}
-            </div>
-            <h3 className="mt-2 truncate text-[15px] font-semibold tracking-tight">
+            <h3 className="truncate text-[15px] font-semibold tracking-tight">
               {p.address}
             </h3>
             <p className="truncate text-xs text-muted-foreground">
@@ -84,38 +70,50 @@ export function PropertyCard({ property: p }: { property: Property }) {
             </p>
           </div>
           <div className="shrink-0 text-right">
-            <p className="font-heading text-lg font-bold tracking-tight">
+            <p className="font-heading text-xl font-bold tracking-tight">
               {formatCurrency(p.price)}
             </p>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-[11px] font-medium text-muted-foreground">
               ${p.pricePerSqFt}/pc
             </p>
           </div>
         </div>
 
-        {/* Specs */}
-        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+        {/* Specs + renta estimada */}
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
           {p.bedrooms > 0 && (
             <span className="inline-flex items-center gap-1">
-              <BedDouble className="size-3.5" /> {p.bedrooms}
+              <BedDouble className="size-3.5" aria-hidden />
+              {p.bedrooms} hab
             </span>
           )}
           <span className="inline-flex items-center gap-1">
-            <ShowerHead className="size-3.5" /> {p.bathrooms}
+            <ShowerHead className="size-3.5" aria-hidden />
+            {p.bathrooms} baño{p.bathrooms !== 1 ? "s" : ""}
           </span>
           <span className="inline-flex items-center gap-1">
-            <Ruler className="size-3.5" /> {p.sqFt.toLocaleString()} pc
+            <Ruler className="size-3.5" aria-hidden />
+            {p.sqFt.toLocaleString()} pc
           </span>
-          <span className="ml-auto font-medium text-foreground/80">
-            Renta est. {formatCurrency(p.estimatedRent)}/mes
+        </div>
+        <div className="mt-3 flex items-center justify-between rounded-xl bg-muted/70 px-3 py-2">
+          <span className="text-[11px] font-medium text-muted-foreground">
+            Renta estimada
+          </span>
+          <span className="text-[13px] font-semibold text-foreground">
+            {formatCurrency(p.estimatedRent)}
+            <span className="text-[11px] font-normal text-muted-foreground">
+              /mes
+            </span>
           </span>
         </div>
 
         {/* Acciones */}
-        <div className="mt-4 flex gap-1.5">
+        <div className="mt-4 flex flex-wrap gap-1.5">
           <Button
             size="xs"
             variant={saved ? "secondary" : "outline"}
+            aria-pressed={saved}
             onClick={() => {
               toggleSaved(p.id)
               toast(saved ? "Quitada de guardadas" : "Guardada en favoritos")
@@ -127,6 +125,7 @@ export function PropertyCard({ property: p }: { property: Property }) {
           <Button
             size="xs"
             variant={comparing ? "secondary" : "outline"}
+            aria-pressed={comparing}
             onClick={() => {
               const ok = toggleCompare(p.id)
               if (ok)
@@ -139,7 +138,6 @@ export function PropertyCard({ property: p }: { property: Property }) {
           </Button>
           <Button
             size="xs"
-            variant="outline"
             onClick={() => {
               setPrefill({
                 propertyId: p.id,

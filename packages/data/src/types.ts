@@ -208,3 +208,17 @@ export interface Contractor {
   /** Una línea de especialidad/bio */
   specialty: string
 }
+
+/**
+ * Precio de referencia de un oficio, alineado con las partidas del estimador.
+ * `unit` describe cómo se cobra; los rangos son precio típico con mano de obra
+ * en PR (2026) por nivel de acabado.
+ */
+export interface TradePrice {
+  trade: ContractorTrade
+  label: string
+  /** Cómo se cobra: total, por pie cuadrado, por baño, por unidad, etc. */
+  unit: string
+  /** Rango típico [min, max] en USD para acabado estándar */
+  range: [number, number]
+}

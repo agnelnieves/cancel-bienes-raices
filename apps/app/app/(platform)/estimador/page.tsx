@@ -53,10 +53,10 @@ const SCOPE: ScopeItem[] = [
   { id: "exteriores", label: "Exteriores / marquesina", hint: "Limpieza, epoxy, verja, landscaping básico", unit: "total", prices: { economico: 1800, estandar: 3200, premium: 5500 } },
 ]
 
-const TIERS: { id: Tier; label: string; hint: string }[] = [
-  { id: "economico", label: "Económico", hint: "Rental básico / C class" },
-  { id: "estandar", label: "Estándar", hint: "Rental bueno / flip medio" },
-  { id: "premium", label: "Premium", hint: "Flip alto / zona turística" },
+const TIERS: { id: Tier; label: string; hint: string; who: string }[] = [
+  { id: "economico", label: "Económico", hint: "Rental básico / C class", who: "Para alquilar a precio accesible sin sobre-invertir." },
+  { id: "estandar", label: "Estándar", hint: "Rental bueno / flip medio", who: "El punto dulce para la mayoría de los flips en PR." },
+  { id: "premium", label: "Premium", hint: "Flip alto / zona turística", who: "Para vender caro o cobrar más la noche en zona turística." },
 ]
 
 export default function EstimadorPage() {
@@ -141,6 +141,7 @@ export default function EstimadorPage() {
                   <button
                     key={t.id}
                     onClick={() => setTier(t.id)}
+                    aria-pressed={tier === t.id}
                     className={cn(
                       "rounded-lg px-2 py-2 text-xs font-semibold transition-all",
                       tier === t.id
@@ -152,8 +153,11 @@ export default function EstimadorPage() {
                   </button>
                 ))}
               </div>
-              <p className="text-[11px] text-muted-foreground">
-                {TIERS.find((t) => t.id === tier)!.hint}
+              <p className="text-[11px] leading-snug text-muted-foreground">
+                <span className="font-medium text-foreground">
+                  {TIERS.find((t) => t.id === tier)!.hint}
+                </span>{" "}
+                · {TIERS.find((t) => t.id === tier)!.who}
               </p>
             </div>
           </CardContent>

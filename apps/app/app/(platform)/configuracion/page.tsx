@@ -2,11 +2,12 @@
 
 import * as React from "react"
 import { useTheme } from "next-themes"
-import { Monitor, Moon, RotateCcw, Sun } from "lucide-react"
+import { BadgeCheck, Check, Monitor, Moon, RotateCcw, Sun, TriangleAlert } from "lucide-react"
 import { toast } from "sonner"
 
 import { zones } from "@cancel/data"
 import {
+  Badge,
   Button,
   Card,
   CardContent,
@@ -52,9 +53,12 @@ export default function ConfiguracionPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-5 animate-fade-in">
       {/* Perfil */}
-      <Card>
+      <Card className="shadow-card">
         <CardHeader>
           <CardTitle className="text-sm">Tu perfil</CardTitle>
+          <p className="text-[11px] text-muted-foreground">
+            Con esto personalizamos tu pulso de mercado y las alertas.
+          </p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2">
@@ -97,35 +101,50 @@ export default function ConfiguracionPage() {
       </Card>
 
       {/* Apariencia */}
-      <Card>
+      <Card className="shadow-card">
         <CardHeader>
           <CardTitle className="text-sm">Apariencia</CardTitle>
+          <p className="text-[11px] text-muted-foreground">
+            “Sistema” sigue el ajuste de tu teléfono o computadora.
+          </p>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 gap-2">
-            {themeOptions.map((opt) => (
-              <button
-                key={opt.id}
-                onClick={() => setTheme(opt.id)}
-                className={cn(
-                  "flex flex-col items-center gap-1.5 rounded-xl border p-3 text-xs font-medium transition-colors",
-                  theme === opt.id
-                    ? "border-primary bg-primary/5 text-primary"
-                    : "border-border text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <opt.icon className="size-4" />
-                {opt.label}
-              </button>
-            ))}
+          <div className="grid grid-cols-3 gap-2" role="group" aria-label="Tema">
+            {themeOptions.map((opt) => {
+              const active = theme === opt.id
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => setTheme(opt.id)}
+                  aria-pressed={active}
+                  className={cn(
+                    "relative flex flex-col items-center gap-1.5 rounded-xl border p-3 text-xs font-medium transition-colors",
+                    active
+                      ? "border-primary bg-primary/5 text-primary"
+                      : "border-border text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {active && (
+                    <span className="absolute top-1.5 right-1.5 flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                      <Check className="size-2.5" />
+                    </span>
+                  )}
+                  <opt.icon className="size-4" />
+                  {opt.label}
+                </button>
+              )
+            })}
           </div>
         </CardContent>
       </Card>
 
       {/* Notificaciones */}
-      <Card>
+      <Card className="shadow-card">
         <CardHeader>
           <CardTitle className="text-sm">Notificaciones</CardTitle>
+          <p className="text-[11px] text-muted-foreground">
+            Solo lo que te ayuda a decidir — nada de ruido.
+          </p>
         </CardHeader>
         <CardContent className="space-y-4">
           {(
@@ -143,6 +162,7 @@ export default function ConfiguracionPage() {
               <Switch
                 checked={notifs[n.id]}
                 onCheckedChange={(v) => setNotifs((cur) => ({ ...cur, [n.id]: v }))}
+                aria-label={n.label}
               />
             </div>
           ))}
@@ -150,14 +170,15 @@ export default function ConfiguracionPage() {
       </Card>
 
       {/* Plan */}
-      <Card className="border-primary/25">
+      <Card className="border-success/25 shadow-card">
         <CardContent className="flex flex-wrap items-center justify-between gap-4 p-5">
           <div>
             <p className="flex items-center gap-2 text-sm font-semibold">
               Plan Comunidad
-              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+              <Badge variant="success">
+                <BadgeCheck className="size-3" />
                 Activo
-              </span>
+              </Badge>
             </p>
             <p className="mt-0.5 text-xs text-muted-foreground">
               Acceso completo incluido con tu membresía de la comunidad.
@@ -174,11 +195,15 @@ export default function ConfiguracionPage() {
       {/* Zona de peligro */}
       <Card className="border-destructive/25">
         <CardContent className="flex flex-wrap items-center justify-between gap-4 p-5">
-          <div>
-            <p className="text-sm font-semibold">Restablecer demo</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Borra tu perfil, pipeline, guardados y ajustes locales.
-            </p>
+          <div className="flex items-start gap-2.5">
+            <TriangleAlert className="mt-0.5 size-4 shrink-0 text-destructive" />
+            <div>
+              <p className="text-sm font-semibold">Restablecer demo</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Borra tu perfil, pipeline, guardados y ajustes locales. No hay
+                vuelta atrás.
+              </p>
+            </div>
           </div>
           <Button variant="destructive" size="sm" onClick={resetDemo}>
             <RotateCcw className="size-3.5" />

@@ -19,6 +19,14 @@ const badgeVariants = cva(
         ghost:
           "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
         link: "text-primary underline-offset-4 hover:underline",
+        /** Cash deal exclusivo — terracota, solo para la data de la red */
+        cash: "bg-cash-soft text-cash border-cash/30 [a]:hover:bg-cash/15",
+        /** Activo / recién listada */
+        info: "bg-info-soft text-info border-info/30 [a]:hover:bg-info/15",
+        /** Advertencia / precaución */
+        warning: "bg-warning-soft text-warning border-warning/30 [a]:hover:bg-warning/15",
+        /** Bueno / positivo */
+        success: "bg-success-soft text-success border-success/30 [a]:hover:bg-success/15",
       },
     },
     defaultVariants: {

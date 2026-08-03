@@ -7,7 +7,7 @@ import {
   Heart,
   MessageCircle,
   Pin,
-  SendHorizonal,
+  SendHorizontal,
   ShieldCheck,
 } from "lucide-react"
 import { toast } from "sonner"
@@ -33,8 +33,8 @@ import { useUserStore } from "@/lib/stores/user"
 
 const roleStyle: Record<string, string> = {
   Fundador: "bg-primary/10 text-primary",
-  Pro: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-  "Realtor verificado": "bg-violet-500/10 text-violet-600 dark:text-violet-400",
+  Pro: "bg-info-soft text-info",
+  "Realtor verificado": "bg-success-soft text-success",
   Miembro: "bg-muted text-muted-foreground",
 }
 
@@ -110,31 +110,43 @@ export default function ComunidadPage() {
     setCommentDraft("")
   }
 
+  const activeChannel = channels.find((c) => c.id === channel)
+
   return (
     <div className="grid gap-5 lg:grid-cols-[200px_1fr] xl:grid-cols-[220px_1fr_240px] animate-fade-in">
       {/* Canales */}
       <aside className="space-y-1 max-lg:flex max-lg:gap-1.5 max-lg:overflow-x-auto max-lg:pb-1">
-        {channels.map((c) => (
-          <button
-            key={c.id}
-            onClick={() => setChannel(c.id)}
-            className={cn(
-              "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-[13px] font-medium whitespace-nowrap transition-colors max-lg:w-auto",
-              channel === c.id
-                ? "bg-accent text-accent-foreground"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
-            )}
-          >
-            <Hash className="size-3.5 shrink-0" />
-            {c.name}
-          </button>
-        ))}
+        {channels.map((c) => {
+          const count = posts.filter((p) => p.channel === c.id).length
+          return (
+            <button
+              key={c.id}
+              onClick={() => setChannel(c.id)}
+              aria-current={channel === c.id ? "true" : undefined}
+              className={cn(
+                "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-[13px] font-medium whitespace-nowrap transition-colors max-lg:w-auto",
+                channel === c.id
+                  ? "bg-accent text-accent-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              <Hash className="size-3.5 shrink-0" />
+              {c.name}
+              <span className={cn(
+                "ml-auto rounded-full px-1.5 text-[10px] font-semibold max-lg:hidden",
+                channel === c.id ? "bg-background/60" : "bg-muted"
+              )}>
+                {count}
+              </span>
+            </button>
+          )
+        })}
       </aside>
 
       {/* Feed */}
       <div className="min-w-0 space-y-4">
         {/* Composer */}
-        <Card>
+        <Card className="shadow-card">
           <CardContent className="p-4">
             <div className="flex gap-3">
               <Avatar className="size-9 shrink-0">
@@ -146,13 +158,16 @@ export default function ComunidadPage() {
                 <Textarea
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
-                  placeholder={`Comparte algo en #${channels.find((c) => c.id === channel)?.name}… un deal, una pregunta, un win`}
+                  placeholder={`Comparte en #${activeChannel?.name}… un deal, una pregunta, un win`}
                   rows={2}
                   className="resize-none"
                 />
-                <div className="flex justify-end">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[10px] text-muted-foreground">
+                    Data real &gt; humo — incluye números si puedes
+                  </p>
                   <Button size="sm" disabled={!draft.trim()} onClick={publish}>
-                    <SendHorizonal className="size-3.5" />
+                    <SendHorizontal className="size-3.5" />
                     Publicar
                   </Button>
                 </div>
@@ -163,7 +178,7 @@ export default function ComunidadPage() {
 
         {/* Posts */}
         {visible.map((post) => (
-          <Card key={post.id} className={cn(post.pinned && "border-primary/25")}>
+          <Card key={post.id} className={cn("shadow-card", post.pinned && "border-primary/25")}>
             <CardContent className="p-4 sm:p-5">
               <div className="flex items-start gap-3">
                 <Avatar className="size-9 shrink-0">
@@ -215,6 +230,7 @@ export default function ComunidadPage() {
                   <div className="mt-3 flex items-center gap-1">
                     <button
                       onClick={() => toggleLike(post.id)}
+                      aria-label={`Me gusta — ${post.likes}`}
                       className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
                     >
                       <Heart className="size-3.5" />
@@ -224,6 +240,8 @@ export default function ComunidadPage() {
                       onClick={() =>
                         setOpenComments(openComments === post.id ? null : post.id)
                       }
+                      aria-label={`Comentarios — ${post.comments.length}`}
+                      aria-expanded={openComments === post.id}
                       className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                     >
                       <MessageCircle className="size-3.5" />
@@ -266,6 +284,7 @@ export default function ComunidadPage() {
                           onChange={(e) => setCommentDraft(e.target.value)}
                           onKeyDown={(e) => e.key === "Enter" && addComment(post.id)}
                           placeholder="Escribe un comentario…"
+                          aria-label="Escribe un comentario"
                           className="h-9 flex-1 rounded-full border border-input bg-transparent px-3.5 text-xs outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
                         />
                       </div>
@@ -276,11 +295,24 @@ export default function ComunidadPage() {
             </CardContent>
           </Card>
         ))}
+
+        {visible.length === 0 && (
+          <Card className="border-dashed">
+            <CardContent className="flex flex-col items-center gap-2 py-14 text-center">
+              <MessageCircle className="size-8 text-muted-foreground/50" />
+              <p className="font-medium">Todavía no hay posts en #{activeChannel?.name}</p>
+              <p className="max-w-sm text-sm text-muted-foreground">
+                Sé el primero — una pregunta buena aquí te ahorra miles en el
+                próximo deal.
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Miembros */}
       <aside className="space-y-3 max-xl:hidden">
-        <Card>
+        <Card className="shadow-card">
           <CardContent className="p-4">
             <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
               Miembros · {members.filter((m) => m.online).length} en línea
@@ -295,9 +327,10 @@ export default function ComunidadPage() {
                       </AvatarFallback>
                     </Avatar>
                     <span
+                      aria-label={m.online ? "En línea" : "Ausente"}
                       className={cn(
                         "absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full border-2 border-card",
-                        m.online ? "bg-primary" : "bg-muted-foreground/40"
+                        m.online ? "bg-success animate-pulse-dot" : "bg-muted-foreground/40"
                       )}
                     />
                   </div>
@@ -312,7 +345,7 @@ export default function ComunidadPage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="border-primary/20 bg-gradient-to-br from-primary/8 to-transparent">
+        <Card className="border-primary/20 bg-gradient-to-br from-primary/8 to-transparent shadow-card">
           <CardContent className="p-4">
             <p className="text-xs font-semibold">Regla de la casa</p>
             <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">

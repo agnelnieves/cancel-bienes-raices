@@ -1,4 +1,4 @@
-import type { Contractor, ContractorTrade } from "./types"
+import type { Contractor, ContractorTrade, TradePrice } from "./types"
 
 // ============================================================================
 // Red de contratistas vetados (mock)
@@ -313,3 +313,25 @@ export const contractorCities: string[] = [
 
 export const contractorById = (id: string): Contractor | undefined =>
   contractors.find((c) => c.id === id)
+
+// ============================================================================
+// Precios de referencia por oficio (mano de obra incluida, PR 2026)
+// Alineados con las partidas del estimador de remodelación.
+// ============================================================================
+
+export const tradePrices: TradePrice[] = [
+  { trade: "remodelacion", label: "Remodelación general", unit: "proyecto", range: [15000, 60000] },
+  { trade: "electricidad", label: "Sistema eléctrico", unit: "total", range: [4500, 9500] },
+  { trade: "plomeria", label: "Plomería", unit: "total", range: [3200, 7200] },
+  { trade: "techos", label: "Techo (sellado/membrana)", unit: "pie cuadrado", range: [2.2, 5] },
+  { trade: "pintura", label: "Pintura (interior)", unit: "pie cuadrado", range: [1.6, 3.2] },
+  { trade: "pisos", label: "Pisos y losas", unit: "pie cuadrado", range: [4.5, 11] },
+  { trade: "aires", label: "Aires mini-split", unit: "unidad instalada", range: [1250, 2300] },
+  { trade: "carpinteria", label: "Carpintería / gabinetes", unit: "proyecto", range: [2500, 9000] },
+  { trade: "exteriores", label: "Exteriores / verjas", unit: "proyecto", range: [1800, 5500] },
+  { trade: "ventanas", label: "Ventanas (seguridad/impacto)", unit: "ventana", range: [450, 980] },
+  { trade: "inspeccion", label: "Inspección pre-compra", unit: "informe", range: [350, 750] },
+]
+
+export const tradePrice = (trade: ContractorTrade): TradePrice | undefined =>
+  tradePrices.find((t) => t.trade === trade)

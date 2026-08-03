@@ -2,14 +2,17 @@
 
 import * as React from "react"
 import { Suspense } from "react"
-import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import {
   ArrowRight,
+  BadgeCheck,
   BadgeDollarSign,
   GitCompareArrows,
+  Lightbulb,
   Map as MapIcon,
+  RotateCcw,
   Search,
+  SearchX,
   SlidersHorizontal,
   X,
 } from "lucide-react"
@@ -105,9 +108,28 @@ function ComparablesInner() {
       cur.includes(s) ? cur.filter((x) => x !== s) : [...cur, s]
     )
 
+  const hasActiveFilters =
+    query.trim() !== "" ||
+    zoneId !== "todas" ||
+    type !== "todos" ||
+    status !== "todas" ||
+    maxPrice < 800000 ||
+    sources.length !== ALL_SOURCES.length ||
+    onlyExclusive
+
+  const resetFilters = () => {
+    setQuery("")
+    setZoneId("todas")
+    setType("todos")
+    setStatus("todas")
+    setMaxPrice(800000)
+    setSources(ALL_SOURCES)
+    setOnlyExclusive(false)
+  }
+
   return (
     <div className="space-y-4 animate-fade-in">
-      {/* Barra de búsqueda */}
+      {/* Búsqueda + filtros guiados */}
       <Card>
         <CardContent className="space-y-3 p-4">
           <div className="flex gap-2">
@@ -125,8 +147,10 @@ function ComparablesInner() {
               size="lg"
               className="lg:hidden"
               onClick={() => setShowFilters((v) => !v)}
+              aria-expanded={showFilters}
             >
               <SlidersHorizontal className="size-4" />
+              Filtros
             </Button>
             <Button
               variant="outline"
@@ -141,7 +165,7 @@ function ComparablesInner() {
 
           <div className={cn("grid gap-3 sm:grid-cols-2 lg:grid-cols-5", !showFilters && "max-lg:hidden")}>
             <div className="space-y-1.5">
-              <Label className="text-[11px]">Zona</Label>
+              <Label className="text-[11px]">¿En qué zona?</Label>
               <Select value={zoneId} onValueChange={setZoneId}>
                 <SelectTrigger className="w-full">
                   <SelectValue />
@@ -157,7 +181,7 @@ function ComparablesInner() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-[11px]">Tipo</Label>
+              <Label className="text-[11px]">Tipo de propiedad</Label>
               <Select value={type} onValueChange={setType}>
                 <SelectTrigger className="w-full">
                   <SelectValue />
@@ -182,7 +206,7 @@ function ComparablesInner() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="todas">Vendidas + activas</SelectItem>
+                  <SelectItem value="todas">Vendidas + en venta</SelectItem>
                   <SelectItem value="sold">Solo vendidas</SelectItem>
                   <SelectItem value="active">Solo en venta</SelectItem>
                 </SelectContent>
@@ -190,7 +214,7 @@ function ComparablesInner() {
             </div>
             <div className="space-y-1.5">
               <Label className="text-[11px]">
-                Precio máx. · {formatCompact(maxPrice)}
+                Precio máximo · {formatCompact(maxPrice)}
               </Label>
               <Slider
                 value={[maxPrice]}
@@ -199,10 +223,11 @@ function ComparablesInner() {
                 max={800000}
                 step={10000}
                 className="py-2.5"
+                aria-label="Precio máximo"
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-[11px]">Ordenar</Label>
+              <Label className="text-[11px]">Ordenar por</Label>
               <Select value={sort} onValueChange={setSort}>
                 <SelectTrigger className="w-full">
                   <SelectValue />
@@ -217,39 +242,53 @@ function ComparablesInner() {
             </div>
           </div>
 
-          {/* Fuentes */}
+          {/* Fuentes — de dónde sale la data */}
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-[11px] font-medium text-muted-foreground">
-              Fuentes:
+              De dónde sale la data:
             </span>
             {ALL_SOURCES.map((s) => (
               <button
                 key={s}
                 onClick={() => toggleSource(s)}
+                aria-pressed={sources.includes(s)}
                 className={cn(
-                  "rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors",
+                  "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
                   sources.includes(s)
                     ? s === "cash"
-                      ? "border-primary/40 bg-primary/10 text-primary"
+                      ? "border-cash/40 bg-cash-soft text-cash"
                       : "border-border bg-muted text-foreground"
                     : "border-border text-muted-foreground/60 hover:text-muted-foreground"
                 )}
               >
+                {s === "cash" && sources.includes(s) && (
+                  <BadgeCheck className="size-3" aria-hidden />
+                )}
                 {sourceMeta[s].label}
               </button>
             ))}
             <button
               onClick={() => setOnlyExclusive((v) => !v)}
+              aria-pressed={onlyExclusive}
               className={cn(
-                "ml-auto inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold transition-colors",
+                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/40 max-sm:w-full max-sm:justify-center sm:ml-auto",
                 onlyExclusive
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-primary/40 text-primary hover:bg-primary/5"
+                  ? "border-cash bg-cash text-cash-foreground"
+                  : "border-cash/40 text-cash hover:bg-cash-soft/60"
               )}
             >
-              <BadgeDollarSign className="size-3" />
-              Solo data exclusiva
+              <BadgeDollarSign className="size-3" aria-hidden />
+              Solo cash deals exclusivos
             </button>
+            {hasActiveFilters && (
+              <button
+                onClick={resetFilters}
+                className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40"
+              >
+                <RotateCcw className="size-3" aria-hidden />
+                Limpiar filtros
+              </button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -264,31 +303,38 @@ function ComparablesInner() {
         />
       )}
 
-      {/* Stats */}
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm">
-        <span className="font-semibold">
-          {filtered.length}{" "}
-          <span className="font-normal text-muted-foreground">
-            {filtered.length === 1 ? "resultado" : "resultados"}
+      {/* Lo que encontré — resumen en palabras sencillas */}
+      {filtered.length > 0 && stats && (
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-2xl border border-border bg-card px-4 py-3 text-sm shadow-card">
+          <span className="font-semibold">
+            {filtered.length}{" "}
+            <span className="font-normal text-muted-foreground">
+              {filtered.length === 1
+                ? "propiedad encontrada"
+                : "propiedades encontradas"}
+            </span>
           </span>
-        </span>
-        {stats && (
-          <>
-            <span className="text-muted-foreground">
-              Mediana <span className="font-medium text-foreground">${stats.medianPpsf}/pc</span>
+          <span className="text-muted-foreground">
+            Precio típico{" "}
+            <span className="font-medium text-foreground">
+              ${stats.medianPpsf}/pc
             </span>
-            <span className="text-muted-foreground">
-              <span className="font-medium text-foreground">{stats.avgDom}d</span> promedio en mercado
+          </span>
+          <span className="text-muted-foreground">
+            Se venden en{" "}
+            <span className="font-medium text-foreground">
+              ~{stats.avgDom} días
             </span>
-            {stats.cashCount > 0 && (
-              <span className="inline-flex items-center gap-1 text-primary">
-                <BadgeDollarSign className="size-3.5" />
-                {stats.cashCount} cash deal{stats.cashCount > 1 ? "s" : ""} exclusivo{stats.cashCount > 1 ? "s" : ""}
-              </span>
-            )}
-          </>
-        )}
-      </div>
+          </span>
+          {stats.cashCount > 0 && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-cash/30 bg-cash-soft px-2.5 py-1 text-[11px] font-semibold text-cash">
+              <BadgeCheck className="size-3.5" aria-hidden />
+              {stats.cashCount} cash deal{stats.cashCount > 1 ? "s" : ""}{" "}
+              exclusivo{stats.cashCount > 1 ? "s" : ""} de la red
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Resultados */}
       {filtered.length > 0 ? (
@@ -305,28 +351,36 @@ function ComparablesInner() {
         </div>
       ) : (
         <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center gap-2 py-14 text-center">
-            <Search className="size-8 text-muted-foreground/50" />
-            <p className="font-medium">Sin resultados con estos filtros</p>
-            <p className="max-w-sm text-sm text-muted-foreground">
-              Prueba ampliando la zona o el precio máximo — o pregúntale al
-              copiloto con ⌘K y deja que él busque por ti.
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-2"
-              onClick={() => {
-                setQuery("")
-                setZoneId("todas")
-                setType("todos")
-                setStatus("todas")
-                setMaxPrice(800000)
-                setSources(ALL_SOURCES)
-                setOnlyExclusive(false)
-              }}
-            >
-              Limpiar filtros
+          <CardContent className="flex flex-col items-center gap-3 py-14 text-center">
+            <span className="flex size-12 items-center justify-center rounded-2xl bg-muted">
+              <SearchX className="size-6 text-muted-foreground/60" />
+            </span>
+            <div>
+              <p className="font-heading font-semibold">
+                Nada por aquí con estos filtros
+              </p>
+              <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
+                No te preocupes — esto pasa cuando los filtros quedan muy
+                estrechos. Esto es lo que puedes hacer:
+              </p>
+            </div>
+            <ul className="mx-auto max-w-sm space-y-1.5 text-left text-[13px] text-muted-foreground">
+              <li className="flex items-start gap-2">
+                <Lightbulb className="mt-0.5 size-3.5 shrink-0 text-primary" aria-hidden />
+                Sube el precio máximo o quita la zona para ver más opciones.
+              </li>
+              <li className="flex items-start gap-2">
+                <Lightbulb className="mt-0.5 size-3.5 shrink-0 text-primary" aria-hidden />
+                Marca todas las fuentes — la exclusiva son solo los cash deals.
+              </li>
+              <li className="flex items-start gap-2">
+                <Lightbulb className="mt-0.5 size-3.5 shrink-0 text-primary" aria-hidden />
+                O pídele al copiloto con ⌘K que busque por ti en español.
+              </li>
+            </ul>
+            <Button size="sm" className="mt-1" onClick={resetFilters}>
+              <RotateCcw className="size-3.5" />
+              Limpiar filtros y empezar de nuevo
             </Button>
           </CardContent>
         </Card>
@@ -342,7 +396,7 @@ function ComparablesInner() {
             </span>
           </div>
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon-sm" onClick={clearCompare} aria-label="Limpiar">
+            <Button variant="ghost" size="icon-sm" onClick={clearCompare} aria-label="Limpiar comparador">
               <X className="size-4" />
             </Button>
             <Button size="sm" onClick={() => router.push("/comparador")}>

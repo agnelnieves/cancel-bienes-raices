@@ -5,8 +5,10 @@ import { Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import {
   BadgeCheck,
+  Briefcase,
   Clipboard,
   Clock,
+  Handshake,
   HardHat,
   Phone,
   Search,
@@ -18,14 +20,17 @@ import { toast } from "sonner"
 import {
   contractorCities,
   contractors,
+  formatCompact,
   tradeLabel,
   tradeMeta,
+  tradePrice,
   type Contractor,
   type ContractorTrade,
 } from "@cancel/data"
 import {
   Avatar,
   AvatarFallback,
+  Badge,
   Button,
   Card,
   CardContent,
@@ -39,8 +44,14 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  cn,
 } from "@cancel/ui"
+
+/** "$2–$5" o "$4.5K–$9.5K" según la magnitud del rango */
+function formatRange(range: [number, number]): string {
+  const fmt = (v: number) =>
+    v >= 1000 ? formatCompact(v) : `$${v % 1 === 0 ? v : v.toFixed(2).replace(/0$/, "")}`
+  return `${fmt(range[0])}–${fmt(range[1])}`
+}
 
 function ContratistasInner() {
   const searchParams = useSearchParams()
@@ -108,10 +119,10 @@ function ContratistasInner() {
         ].map((item) => (
           <div
             key={item.title}
-            className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4"
+            className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4 shadow-card"
           >
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-              <item.icon className="size-4 text-primary" />
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-success-soft">
+              <item.icon className="size-4 text-success" />
             </div>
             <div>
               <p className="text-[13px] font-semibold">{item.title}</p>
@@ -124,7 +135,7 @@ function ContratistasInner() {
       </div>
 
       {/* Filtros */}
-      <Card>
+      <Card className="shadow-card">
         <CardContent className="flex flex-col gap-3 p-4 lg:flex-row lg:items-center">
           <div className="relative flex-1">
             <Search className="absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -137,7 +148,7 @@ function ContratistasInner() {
           </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:w-auto">
             <Select value={trade} onValueChange={setTrade}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full" aria-label="Oficio">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -150,7 +161,7 @@ function ContratistasInner() {
               </SelectContent>
             </Select>
             <Select value={city} onValueChange={setCity}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full" aria-label="Municipio">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -163,7 +174,7 @@ function ContratistasInner() {
               </SelectContent>
             </Select>
             <Select value={sort} onValueChange={setSort}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full" aria-label="Ordenar por">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -177,6 +188,7 @@ function ContratistasInner() {
               variant={onlyVerified ? "default" : "outline"}
               onClick={() => setOnlyVerified((v) => !v)}
               className="w-full"
+              aria-pressed={onlyVerified}
             >
               <BadgeCheck className="size-4" />
               Verificados
@@ -185,13 +197,19 @@ function ContratistasInner() {
         </CardContent>
       </Card>
 
-      {/* Resultados */}
-      <p className="text-sm text-muted-foreground">
-        <strong className="text-foreground">{filtered.length}</strong>{" "}
-        {filtered.length === 1 ? "profesional disponible" : "profesionales disponibles"}
-        {trade !== "todos" && <> · {tradeLabel(trade as ContractorTrade)}</>}
-        {city !== "todas" && <> · {city}</>}
-      </p>
+      {/* Resultados + honestidad sobre el orden */}
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5">
+        <p className="text-sm text-muted-foreground">
+          <strong className="text-foreground">{filtered.length}</strong>{" "}
+          {filtered.length === 1 ? "profesional disponible" : "profesionales disponibles"}
+          {trade !== "todos" && <> · {tradeLabel(trade as ContractorTrade)}</>}
+          {city !== "todas" && <> · {city}</>}
+        </p>
+        <p className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <Handshake className="size-3.5 shrink-0 text-success" />
+          El orden de los resultados no se vende — se gana con trabajos reales.
+        </p>
+      </div>
 
       {filtered.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -234,7 +252,10 @@ function ContratistasInner() {
                 <DialogTitle className="flex items-center gap-2">
                   {contact.name}
                   {contact.verified && (
-                    <BadgeCheck className="size-4 text-primary" />
+                    <Badge variant="success">
+                      <BadgeCheck className="size-3" />
+                      Verificado
+                    </Badge>
                   )}
                 </DialogTitle>
               </DialogHeader>
@@ -270,6 +291,10 @@ function ContratistasInner() {
                     <Clock className="size-3.5" />
                     Responde en {contact.responseTime} · {contact.baseCity}
                   </div>
+                  <div className="flex items-center gap-2.5 text-[12px] text-muted-foreground">
+                    <Briefcase className="size-3.5" />
+                    {contact.jobsDone} trabajos validados en la red
+                  </div>
                 </div>
                 <Button className="w-full" asChild>
                   <a href={`tel:${contact.phone.replace(/[^0-9]/g, "")}`}>
@@ -295,8 +320,12 @@ function ContractorCard({
   contractor: Contractor
   onContact: () => void
 }) {
+  const pricedTrades = c.trades
+    .map((t) => ({ trade: t, price: tradePrice(t) }))
+    .filter((x) => x.price)
+
   return (
-    <Card className="flex flex-col transition-all hover:shadow-lift">
+    <Card className="flex flex-col shadow-card transition-all hover:shadow-lift">
       <CardContent className="flex flex-1 flex-col p-5">
         <div className="flex items-start gap-3">
           <Avatar className="size-11 border border-border">
@@ -309,17 +338,17 @@ function ContractorCard({
               <h3 className="truncate text-[15px] font-semibold tracking-tight">
                 {c.name}
               </h3>
-              {c.verified && (
-                <BadgeCheck className="size-4 shrink-0 text-primary" />
-              )}
             </div>
             <p className="truncate text-xs text-muted-foreground">
-              {c.baseCity} · {c.yearsExp} años de experiencia
+              {c.baseCity} · {c.yearsExp} años · {"$".repeat(c.priceTier)}
             </p>
           </div>
-          <span className="shrink-0 rounded-full bg-muted px-2 py-1 text-[11px] font-bold text-muted-foreground">
-            {"$".repeat(c.priceTier)}
-          </span>
+          {c.verified && (
+            <Badge variant="success" className="shrink-0">
+              <BadgeCheck className="size-3" />
+              Verificado
+            </Badge>
+          )}
         </div>
 
         <div className="mt-3 flex flex-wrap gap-1.5">
@@ -333,27 +362,63 @@ function ContractorCard({
           ))}
         </div>
 
+        {/* Precios transparentes de referencia junto a los oficios */}
+        {pricedTrades.length > 0 && (
+          <div className="mt-2.5 rounded-xl bg-muted/50 px-3 py-2">
+            <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+              Rango típico en PR
+            </p>
+            <ul className="mt-1 space-y-0.5">
+              {pricedTrades.map(({ trade, price }) => (
+                <li
+                  key={trade}
+                  className="flex items-baseline justify-between gap-2 text-[11.5px]"
+                >
+                  <span className="truncate text-muted-foreground">
+                    {price!.label}
+                  </span>
+                  <span className="shrink-0 font-semibold text-foreground">
+                    {formatRange(price!.range)}
+                    <span className="font-normal text-muted-foreground">
+                      {" "}/ {price!.unit}
+                    </span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-1 text-[9.5px] leading-snug text-muted-foreground/80">
+              Referencia con mano de obra incluida — tu estimado final depende del scope.
+            </p>
+          </div>
+        )}
+
         <p className="mt-3 flex-1 text-[12.5px] leading-relaxed text-muted-foreground">
           {c.specialty}
         </p>
 
-        <div className="mt-3 flex items-center gap-3 text-[12px]">
-          <span className="inline-flex items-center gap-1 font-semibold">
-            <Star className="size-3.5 fill-amber-400 text-amber-400" />
-            {c.rating.toFixed(1)}
-            <span className="font-normal text-muted-foreground">
-              ({c.reviews})
-            </span>
-          </span>
-          <span className="text-muted-foreground">
-            {c.jobsDone} trabajos en la red
-          </span>
+        {/* Lo que de verdad importa: trabajos reales y rapidez de respuesta */}
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <div className="rounded-xl border border-border p-2.5">
+            <p className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
+              <Briefcase className="size-3" />
+              Trabajos en la red
+            </p>
+            <p className="mt-0.5 font-heading text-base font-bold">{c.jobsDone}</p>
+          </div>
+          <div className="rounded-xl border border-border p-2.5">
+            <p className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
+              <Clock className="size-3" />
+              Responde en
+            </p>
+            <p className="mt-0.5 font-heading text-base font-bold">{c.responseTime}</p>
+          </div>
         </div>
 
-        <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-          <Clock className="size-3" />
-          Responde en {c.responseTime}
-          <span className="mx-1">·</span>
+        <div className="mt-2.5 flex items-center justify-between text-[11px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1">
+            <Star className="size-3.5 fill-amber-400 text-amber-400" />
+            {c.rating.toFixed(1)} ({c.reviews} reseñas)
+          </span>
           <span className="truncate">
             {c.zonesServed.includes("Toda la isla")
               ? "Toda la isla"

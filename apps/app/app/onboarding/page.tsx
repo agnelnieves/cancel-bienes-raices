@@ -2,13 +2,22 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, ArrowRight, Check, Sparkles } from "lucide-react"
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  MapPin,
+  PartyPopper,
+  Sparkles,
+  Target,
+  Wallet,
+} from "lucide-react"
 
 import { zones } from "@cancel/data"
 import { Button, cn } from "@cancel/ui"
 
 import { Logo } from "@/components/shell/logo"
-import { useUserStore } from "@/lib/stores/user"
+import { type UserProfile, useUserStore } from "@/lib/stores/user"
 
 // ---------------------------------------------------------------------------
 // Onboarding conversacional determinista — se siente como IA, es 100% local
@@ -104,7 +113,7 @@ export default function OnboardingPage() {
   React.useEffect(() => {
     // efecto de "escribiendo…" al entrar cada pregunta
     setTyping(true)
-    const t = setTimeout(() => setTyping(false), 900)
+    const t = setTimeout(() => setTyping(false), 850)
     return () => clearTimeout(t)
   }, [stepIndex])
 
@@ -132,18 +141,17 @@ export default function OnboardingPage() {
   }
 
   const finish = (allValues: Record<string, string | string[]>) => {
-    setDone(true)
     const name = String(allValues.name ?? "")
-    setTimeout(() => {
-      completeOnboarding({
-        name,
-        experience: (allValues.experience as "novato") ?? "novato",
-        strategies: (allValues.strategies as string[]) ?? [],
-        zones: (allValues.zones as string[]) ?? [],
-        budget: (allValues.budget as string) ?? null,
-        capital: (allValues.capital as string) ?? null,
-      })
-    }, 600)
+    completeOnboarding({
+      name,
+      experience:
+        (allValues.experience as UserProfile["experience"]) ?? "novato",
+      strategies: (allValues.strategies as string[]) ?? [],
+      zones: (allValues.zones as string[]) ?? [],
+      budget: (allValues.budget as string) ?? null,
+      capital: (allValues.capital as string) ?? null,
+    })
+    setDone(true)
   }
 
   const goBack = () => {
@@ -181,7 +189,14 @@ export default function OnboardingPage() {
           Configurar después →
         </button>
       </div>
-      <div className="h-0.5 bg-muted">
+      <div
+        className="h-0.5 bg-muted"
+        role="progressbar"
+        aria-valuenow={progress}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label="Progreso de configuración"
+      >
         <div
           className="h-full bg-primary transition-all duration-500"
           style={{ width: `${progress}%` }}
@@ -227,9 +242,10 @@ export default function OnboardingPage() {
                         value={textInput}
                         onChange={(e) => setTextInput(e.target.value)}
                         placeholder={step.placeholder}
+                        aria-label="Tu nombre"
                         className="h-12 flex-1 rounded-2xl border border-input bg-card px-4 text-[15px] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
                       />
-                      <Button type="submit" size="lg" disabled={!canContinue}>
+                      <Button type="submit" size="lg" disabled={!canContinue} aria-label="Continuar">
                         <ArrowRight className="size-4" />
                       </Button>
                     </form>
@@ -237,11 +253,12 @@ export default function OnboardingPage() {
 
                   {step.type === "single" && (
                     <div className="flex flex-wrap gap-2">
-                      {step.options!.map((opt) => (
+                      {step.options!.map((opt, i) => (
                         <OptionChip
                           key={opt.id}
                           label={opt.label}
                           hint={opt.hint}
+                          index={i}
                           onClick={() => commitAnswer(opt.label, opt.id)}
                         />
                       ))}
@@ -251,7 +268,7 @@ export default function OnboardingPage() {
                   {step.type === "multi" && (
                     <>
                       <div className="flex flex-wrap gap-2">
-                        {step.options!.map((opt) => {
+                        {step.options!.map((opt, i) => {
                           const selected =
                             Array.isArray(currentValue) && currentValue.includes(opt.id)
                           return (
@@ -260,6 +277,7 @@ export default function OnboardingPage() {
                               label={opt.label}
                               hint={opt.hint}
                               selected={selected}
+                              index={i}
                               onClick={() => {
                                 const cur = Array.isArray(currentValue)
                                   ? currentValue
@@ -295,7 +313,11 @@ export default function OnboardingPage() {
               )}
             </>
           ) : (
-            <SummaryCard name={String(values.name ?? "")} onGo={() => router.push("/")} />
+            <SummaryCard
+              name={String(values.name ?? "")}
+              values={values}
+              onGo={() => router.push("/")}
+            />
           )}
           <div ref={endRef} />
         </div>
@@ -320,7 +342,7 @@ export default function OnboardingPage() {
 function BotBubble({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-start gap-2.5 animate-fade-up">
-      <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+      <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-soft">
         <Sparkles className="size-4" />
       </div>
       <div className="max-w-[85%] rounded-2xl rounded-tl-md border border-border bg-card px-4 py-3 text-[14px] leading-relaxed shadow-soft">
@@ -333,7 +355,7 @@ function BotBubble({ children }: { children: React.ReactNode }) {
 function UserBubble({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex justify-end animate-fade-up">
-      <div className="max-w-[85%] rounded-2xl rounded-br-md bg-primary px-4 py-2.5 text-[14px] text-primary-foreground">
+      <div className="max-w-[85%] rounded-2xl rounded-br-md bg-primary px-4 py-2.5 text-[14px] text-primary-foreground shadow-soft">
         {children}
       </div>
     </div>
@@ -342,8 +364,8 @@ function UserBubble({ children }: { children: React.ReactNode }) {
 
 function TypingBubble() {
   return (
-    <div className="flex items-start gap-2.5 animate-fade-in">
-      <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+    <div className="flex items-start gap-2.5 animate-fade-in" aria-label="Escribiendo…">
+      <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-soft">
         <Sparkles className="size-4" />
       </div>
       <div className="flex gap-1 rounded-2xl rounded-tl-md border border-border bg-card px-4 py-3.5 shadow-soft">
@@ -359,18 +381,22 @@ function OptionChip({
   label,
   hint,
   selected,
+  index = 0,
   onClick,
 }: {
   label: string
   hint?: string
   selected?: boolean
+  index?: number
   onClick: () => void
 }) {
   return (
     <button
       onClick={onClick}
+      aria-pressed={selected}
+      style={{ animationDelay: `${Math.min(index, 8) * 45}ms` }}
       className={cn(
-        "group flex items-center gap-2 rounded-full border px-4 py-2.5 text-left text-[13px] font-medium transition-all",
+        "group flex animate-fade-up items-center gap-2 rounded-full border px-4 py-2.5 text-left text-[13px] font-medium transition-all",
         selected
           ? "border-primary bg-primary text-primary-foreground shadow-soft"
           : "border-border bg-card text-foreground hover:border-primary/50 hover:bg-accent"
@@ -394,25 +420,77 @@ function OptionChip({
   )
 }
 
-function SummaryCard({ name, onGo }: { name: string; onGo: () => void }) {
+function labelFor(stepId: string, id: string): string {
+  return (
+    STEPS.find((s) => s.id === stepId)?.options?.find((o) => o.id === id)?.label ?? id
+  )
+}
+
+function SummaryCard({
+  name,
+  values,
+  onGo,
+}: {
+  name: string
+  values: Record<string, string | string[]>
+  onGo: () => void
+}) {
+  const zoneNames = ((values.zones as string[]) ?? []).map((z) => labelFor("zones", z))
+  const strategies = ((values.strategies as string[]) ?? []).map((s) => labelFor("strategies", s))
+  const budget = values.budget ? labelFor("budget", String(values.budget)) : null
+  const capital = values.capital ? labelFor("capital", String(values.capital)) : null
+
+  const recap = [
+    { icon: MapPin, label: "Tus zonas", value: zoneNames.join(", ") || "—" },
+    { icon: Target, label: "Tu jugada", value: strategies.join(", ") || "—" },
+    {
+      icon: Wallet,
+      label: "Presupuesto y financiamiento",
+      value: [budget, capital].filter(Boolean).join(" · ") || "—",
+    },
+  ]
+
   return (
     <div className="space-y-5 animate-fade-up">
       <BotBubble>
-        Tu panel está listo{name ? `, ${name.split(" ")[0]}` : ""}. 🎉 Personalicé
-        tu pulso de mercado con tus zonas y estrategias. Desde aquí puedes buscar
-        comparables, correr números y empezar a llenar tu pipeline.
+        <span className="inline-flex items-center gap-1.5 font-semibold">
+          <PartyPopper className="size-4 text-primary" />
+          ¡Listo{name ? `, ${name.split(" ")[0]}` : ""}!
+        </span>
+        <br />
+        Tu panel quedó personalizado con tus zonas y tu jugada. Esto es lo que
+        preparé para ti:
       </BotBubble>
+
+      {/* Recap de lo configurado */}
+      <div className="space-y-2 rounded-2xl border border-border bg-card p-4 shadow-card">
+        {recap.map((r) => (
+          <div key={r.label} className="flex items-start gap-3">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-success-soft">
+              <r.icon className="size-4 text-success" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+                {r.label}
+              </p>
+              <p className="truncate text-[13px] font-medium">{r.value}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
       <div className="rounded-2xl border border-primary/25 bg-accent p-5">
         <p className="text-sm font-semibold text-accent-foreground">
-          Tip para empezar
+          Tu próximo paso
         </p>
         <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
-          Presiona <kbd className="rounded border border-border bg-card px-1.5 py-0.5 text-[11px]">⌘K</kbd> en
-          cualquier momento y dile al copiloto:{" "}
-          <em>“busca casas en tu zona bajo tu presupuesto”</em>. Él hace el trabajo
-          por ti.
+          Entra a tu panel y presiona{" "}
+          <kbd className="rounded border border-border bg-card px-1.5 py-0.5 text-[11px]">⌘K</kbd>{" "}
+          — dile al copiloto: <em>“busca casas en mi zona bajo mi presupuesto”</em>{" "}
+          y él hace el trabajo por ti.
         </p>
       </div>
+
       <Button size="lg" className="w-full sm:w-auto" onClick={onGo}>
         Ir a mi panel
         <ArrowRight className="size-4" />

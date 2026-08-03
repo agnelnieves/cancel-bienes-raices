@@ -169,7 +169,7 @@ export function Hero() {
                     >
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold text-primary">
+                          <span className="inline-flex items-center gap-1 rounded-md bg-cash-soft px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-cash ring-1 ring-cash/30">
                             <BadgeCheck className="size-2.5" />
                             CASH · EXCLUSIVO
                           </span>
@@ -192,9 +192,9 @@ export function Hero() {
                     </motion.div>
                   ))}
                 </div>
-                <div className="flex items-center gap-2 rounded-xl border border-dashed border-primary/30 bg-primary/5 px-3.5 py-2.5">
-                  <Lock className="size-3.5 shrink-0 text-primary" />
-                  <p className="text-[11px] text-primary">
+                <div className="flex items-center gap-2 rounded-xl border border-dashed border-cash/40 bg-cash-soft px-3.5 py-2.5">
+                  <Lock className="size-3.5 shrink-0 text-cash" />
+                  <p className="text-[11px] text-cash">
                     <strong>+{marketStats.totalComparables - 4} comparables más</strong>{" "}
                     — la mayoría no existe en Zillow ni MLS
                   </p>

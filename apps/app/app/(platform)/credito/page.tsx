@@ -2,19 +2,26 @@
 
 import * as React from "react"
 import {
-  AlertTriangle,
   BadgePercent,
+  CircleHelp,
   CreditCard as CardIcon,
   Landmark,
   Pencil,
   Play,
   Plus,
+  ShieldCheck,
   Sparkles,
+  TriangleAlert,
 } from "lucide-react"
 import { toast } from "sonner"
 
 import { formatCurrency, type CreditCard } from "@cancel/data"
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+  Badge,
   Button,
   Card,
   CardContent,
@@ -26,7 +33,6 @@ import {
   DialogTitle,
   Input,
   Label,
-  Progress,
   Separator,
   cn,
 } from "@cancel/ui"
@@ -38,8 +44,23 @@ const MAX_UTIL = 30 // % máximo saludable por tarjeta
 const utilOf = (c: CreditCard) =>
   Math.round(((c.currentBalance + c.allocated) / c.creditLimit) * 100)
 
-const utilColor = (u: number) =>
-  u <= 30 ? "text-primary" : u <= 50 ? "text-amber-500" : "text-destructive"
+/** Cuánto más puedes comprometer en esta línea sin pasar del 30% */
+const safeRoomOf = (c: CreditCard) =>
+  Math.max(0, (MAX_UTIL / 100) * c.creditLimit - c.currentBalance - c.allocated)
+
+type UtilTone = "success" | "warning" | "destructive"
+
+function utilTone(u: number): { tone: UtilTone; verdict: string } {
+  if (u <= 30) return { tone: "success", verdict: "saludable" }
+  if (u <= 50) return { tone: "warning", verdict: "cuidado" }
+  return { tone: "destructive", verdict: "alto — baja este balance" }
+}
+
+const toneText: Record<UtilTone, string> = {
+  success: "text-success",
+  warning: "text-warning",
+  destructive: "text-destructive",
+}
 
 export default function CreditoPage() {
   const { cards, applyPlan, updateCard } = useCreditStore()
@@ -58,6 +79,7 @@ export default function CreditoPage() {
       used: balance + allocated,
       util: limit > 0 ? Math.round(((balance + allocated) / limit) * 100) : 0,
       available: limit - balance - allocated,
+      safeRoom: cards.reduce((a, c) => a + safeRoomOf(c), 0),
     }
   }, [cards])
 
@@ -72,7 +94,7 @@ export default function CreditoPage() {
     const alloc: Record<string, number> = {}
     let remaining = target
     for (const c of sorted) {
-      const room = Math.max(0, (MAX_UTIL / 100) * c.creditLimit - c.currentBalance - c.allocated)
+      const room = safeRoomOf(c)
       const take = Math.min(room, remaining)
       if (take > 0) alloc[c.id] = Math.round(take)
       remaining -= take
@@ -104,20 +126,26 @@ export default function CreditoPage() {
     : 0
 
   const editCard = cards.find((c) => c.id === editId)
+  const globalTone = utilTone(totals.util)
 
   return (
     <div className="space-y-5 animate-fade-in">
-      {/* Resumen */}
+      {/* Resumen — veredicto primero */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <SummaryCard label="Crédito total" value={formatCurrency(totals.limit)} sub={`${cards.length} líneas`} />
         <SummaryCard
           label="Utilización global"
           value={`${totals.util}%`}
-          sub={totals.util <= MAX_UTIL ? "saludable" : "por encima del ideal"}
-          tone={totals.util <= MAX_UTIL ? "good" : "warn"}
+          sub={`${globalTone.verdict} — el ideal es ≤ ${MAX_UTIL}%`}
+          tone={globalTone.tone}
+        />
+        <SummaryCard
+          label="Puedes usar sin riesgo"
+          value={formatCurrency(Math.round(totals.safeRoom))}
+          sub={`sin pasar del ${MAX_UTIL}% por tarjeta`}
+          tone="success"
         />
         <SummaryCard label="En jugadas activas" value={formatCurrency(totals.allocated)} sub="asignado a deals" />
-        <SummaryCard label="Disponible" value={formatCurrency(totals.available)} sub="sin comprometer" tone="good" />
       </div>
 
       <div className="grid gap-5 lg:grid-cols-5">
@@ -126,14 +154,15 @@ export default function CreditoPage() {
           <div className="flex items-center justify-between">
             <h3 className="font-heading text-sm font-bold">Tus líneas</h3>
             <p className="text-[11px] text-muted-foreground">
-              Balance + asignado vs. límite
+              Gris = balance · teal = en jugada
             </p>
           </div>
           {cards.map((c) => {
             const util = utilOf(c)
             const balancePct = (c.currentBalance / c.creditLimit) * 100
+            const t = utilTone(util)
             return (
-              <Card key={c.id}>
+              <Card key={c.id} className="shadow-card">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
@@ -149,15 +178,15 @@ export default function CreditoPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       {c.promoApr === 0 && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                        <Badge variant="success">
                           <BadgePercent className="size-3" />
                           0% hasta {new Date(`${c.promoEnds}T12:00:00`).toLocaleDateString("es-PR", { month: "short", year: "numeric" })}
-                        </span>
+                        </Badge>
                       )}
                       <button
                         onClick={() => setEditId(c.id)}
                         className="text-muted-foreground transition-colors hover:text-foreground"
-                        aria-label="Editar"
+                        aria-label={`Editar ${c.name}`}
                       >
                         <Pencil className="size-3.5" />
                       </button>
@@ -165,13 +194,22 @@ export default function CreditoPage() {
                   </div>
 
                   <div className="mt-3">
-                    <div className="relative h-2 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="relative h-2 overflow-hidden rounded-full bg-muted"
+                      role="img"
+                      aria-label={`Utilización ${util}% de ${formatCurrency(c.creditLimit)}`}
+                    >
                       <div
                         className="absolute inset-y-0 left-0 rounded-full bg-muted-foreground/45"
                         style={{ width: `${balancePct}%` }}
                       />
                       <div
-                        className="absolute inset-y-0 rounded-r-full bg-primary"
+                        className={cn(
+                          "absolute inset-y-0 rounded-r-full",
+                          t.tone === "success" && "bg-success",
+                          t.tone === "warning" && "bg-warning",
+                          t.tone === "destructive" && "bg-destructive"
+                        )}
                         style={{ left: `${balancePct}%`, width: `${(c.allocated / c.creditLimit) * 100}%` }}
                       />
                     </div>
@@ -179,13 +217,16 @@ export default function CreditoPage() {
                       <span className="text-muted-foreground">
                         Balance {formatCurrency(c.currentBalance)}
                         {c.allocated > 0 && (
-                          <span className="text-primary">
+                          <span className={toneText[t.tone]}>
                             {" "}+ {formatCurrency(c.allocated)} en jugada
                           </span>
                         )}
                       </span>
-                      <span className={cn("font-semibold", utilColor(util))}>
+                      <span className={cn("inline-flex items-center gap-1.5 font-semibold", toneText[t.tone])}>
                         {util}% de {formatCurrency(c.creditLimit)}
+                        <span className="font-normal text-muted-foreground">
+                          · {t.verdict}
+                        </span>
                       </span>
                     </div>
                   </div>
@@ -197,7 +238,7 @@ export default function CreditoPage() {
 
         {/* ------------------------------ Plan de jugada ------------------------------ */}
         <div className="space-y-4 lg:col-span-2">
-          <Card className="border-primary/25 bg-gradient-to-br from-primary/6 to-transparent">
+          <Card className="border-primary/25 bg-gradient-to-br from-primary/6 to-transparent shadow-card">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-sm">
                 <Sparkles className="size-4 text-primary" />
@@ -206,9 +247,9 @@ export default function CreditoPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-xs leading-relaxed text-muted-foreground">
-                ¿Cuánto necesitas para tu próximo deal? El planificador distribuye
-                el monto entre tus líneas — priorizando las del 0% APR y sin pasar
-                del {MAX_UTIL}% de utilización por tarjeta.
+                ¿Cuánto necesitas para tu próximo deal? El planificador lo
+                reparte entre tus líneas — primero las del 0% APR y nunca
+                pasando del {MAX_UTIL}% por tarjeta.
               </p>
               <div className="flex gap-2">
                 <div className="relative flex-1">
@@ -221,6 +262,7 @@ export default function CreditoPage() {
                     onChange={(e) => setTarget(Number(e.target.value) || 0)}
                     step={5000}
                     className="h-11 rounded-full pl-7"
+                    aria-label="Monto a planificar"
                   />
                 </div>
                 <Button size="lg" onClick={plan}>
@@ -238,12 +280,16 @@ export default function CreditoPage() {
                     const newUtil = Math.round(
                       ((c.currentBalance + c.allocated + amt) / c.creditLimit) * 100
                     )
+                    const nt = utilTone(newUtil)
                     return (
                       <div key={id} className="flex items-center justify-between text-sm">
                         <div>
                           <p className="text-[13px] font-medium">{c.name}</p>
                           <p className="text-[10px] text-muted-foreground">
-                            {(c.promoApr ?? c.apr)}% APR → {newUtil}% util
+                            {(c.promoApr ?? c.apr)}% APR →{" "}
+                            <span className={cn("font-medium", toneText[nt.tone])}>
+                              {newUtil}% util
+                            </span>
                           </p>
                         </div>
                         <span className="font-heading font-bold">{formatCurrency(amt)}</span>
@@ -267,8 +313,8 @@ export default function CreditoPage() {
                     </div>
                   </div>
                   {plannedTotal < target && (
-                    <div className="flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-[11px] leading-relaxed text-amber-700 dark:text-amber-300">
-                      <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
+                    <div className="flex items-start gap-2 rounded-xl border border-warning/30 bg-warning-soft p-3 text-[11px] leading-relaxed text-warning">
+                      <TriangleAlert className="mt-0.5 size-3.5 shrink-0" />
                       Solo alcanzas {formatCurrency(plannedTotal)} de{" "}
                       {formatCurrency(target)} manteniendo utilización saludable.
                       Opciones: pedir aumento de línea, abrir otra tarjeta al 0%, o
@@ -298,12 +344,43 @@ export default function CreditoPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-4 text-[11px] leading-relaxed text-muted-foreground">
-              <strong className="text-foreground">Regla de la comunidad:</strong>{" "}
-              nunca pases del {MAX_UTIL}% por tarjeta después del mes 3 de la
-              jugada. Usa el cash flow de la propiedad para bajar los balances y
-              liberar las líneas para el próximo deal.
+          {/* Por qué el 30% — en español llano */}
+          <Card className="shadow-card">
+            <Accordion type="single" collapsible>
+              <AccordionItem value="porque" className="border-b-0">
+                <AccordionTrigger className="px-4 py-3 text-[12px] font-medium hover:no-underline">
+                  <span className="inline-flex items-center gap-2">
+                    <CircleHelp className="size-3.5 text-primary" />
+                    ¿Por qué no pasar del {MAX_UTIL}%?
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4">
+                  <div className="space-y-2 text-[11.5px] leading-relaxed text-muted-foreground">
+                    <p>
+                      Si usas más del {MAX_UTIL}% de una línea, tu puntuación de
+                      crédito baja — aunque pagues a tiempo. Y con mal crédito
+                      se acaban las tarjetas al 0% que hacen barata la jugada.
+                    </p>
+                    <p>
+                      <strong className="text-foreground">La salida:</strong>{" "}
+                      usa el cash flow de la propiedad para bajar los balances
+                      antes del mes 3, liberar las líneas y repetir con el
+                      próximo deal.
+                    </p>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </Card>
+
+          <Card className="border-success/25 bg-success-soft/50 shadow-card">
+            <CardContent className="flex items-start gap-2.5 p-4 text-[11px] leading-relaxed text-muted-foreground">
+              <ShieldCheck className="mt-0.5 size-4 shrink-0 text-success" />
+              <p>
+                <strong className="text-foreground">Regla de la comunidad:</strong>{" "}
+                nunca pases del {MAX_UTIL}% por tarjeta después del mes 3 de la
+                jugada. El deal tiene que pagar la línea — no al revés.
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -342,17 +419,16 @@ function SummaryCard({
   label: string
   value: string
   sub: string
-  tone?: "good" | "warn"
+  tone?: UtilTone
 }) {
   return (
-    <Card>
+    <Card className="shadow-card">
       <CardContent className="p-4">
         <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
         <p
           className={cn(
             "mt-1 font-heading text-xl font-bold tracking-tight sm:text-2xl",
-            tone === "good" && "text-primary",
-            tone === "warn" && "text-amber-500"
+            tone && toneText[tone]
           )}
         >
           {value}

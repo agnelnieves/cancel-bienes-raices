@@ -17,8 +17,8 @@ import {
   CircleDollarSign,
   GripVertical,
   KanbanSquare,
-  Pencil,
   Plus,
+  Sparkles,
   Trash2,
 } from "lucide-react"
 import { toast } from "sonner"
@@ -32,6 +32,7 @@ import {
   type DealStage,
 } from "@cancel/data"
 import {
+  Badge,
   Button,
   Card,
   CardContent,
@@ -55,6 +56,26 @@ import {
 } from "@cancel/ui"
 
 import { usePipelineStore } from "@/lib/stores/pipeline"
+
+/** Tier de ROI con variante de Badge + lectura en español llano */
+function roiTier(roi: number): {
+  variant: "success" | "warning" | "destructive" | "outline"
+  verdict: string
+} {
+  if (roi <= 0) return { variant: "outline", verdict: "Sin estimar" }
+  if (roi >= 14) return { variant: "success", verdict: "fuerte" }
+  if (roi >= 8) return { variant: "warning", verdict: "moderado" }
+  return { variant: "destructive", verdict: "bajo" }
+}
+
+const EMPTY_HINT: Record<DealStage, string> = {
+  prospecto: "Esa propiedad con potencial que viste — añádela con “Nuevo deal”.",
+  analisis: "Arrastra aquí la que ya estás corriendo en números.",
+  oferta: "Cuando ofertes, muévela a esta etapa.",
+  negociacion: "Aquí van los regateos y contraofertas.",
+  "due-diligence": "Inspección, tasación y papeleo — la recta final.",
+  cierre: "Aquí celebramos los cerrados. 🎉",
+}
 
 export default function DealsPage() {
   const { deals, moveDeal, updateDeal, removeDeal } = usePipelineStore()
@@ -97,7 +118,12 @@ export default function DealsPage() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
         <StatCard label="Valor del pipeline" value={formatCompact(pipelineValue)} sub={`${activeDeals.length} deals activos`} />
-        <StatCard label="ROI promedio" value={`${avgRoi.toFixed(1)}%`} sub="estimado de tus deals" />
+        <StatCard
+          label="ROI promedio"
+          value={`${avgRoi.toFixed(1)}%`}
+          sub={avgRoi >= 8 ? "vs. 8% típico en PR — vas bien" : "el típico en PR es ~8%"}
+          tone={avgRoi >= 8 ? "good" : "neutral"}
+        />
         <StatCard
           label="Cash flow potencial"
           value={`${formatCurrency(Math.round(deals.reduce((a, d) => a + d.cashFlow, 0)))}`}
@@ -105,9 +131,9 @@ export default function DealsPage() {
         />
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
-          Arrastra las tarjetas para mover deals de etapa
+          Tu próximo paso: arrastra cada tarjeta a la etapa donde va el deal
         </p>
         <Button size="sm" onClick={() => setAddOpen(true)}>
           <Plus className="size-3.5" />
@@ -151,7 +177,12 @@ export default function DealsPage() {
                     label="Tu oferta"
                     value={detail.offerPrice ? formatCurrency(detail.offerPrice) : "—"}
                   />
-                  <MiniStat label="ROI estimado" value={`${detail.roi}%`} highlight={detail.roi >= 12} />
+                  <MiniStat
+                    label="ROI estimado"
+                    value={`${detail.roi}%`}
+                    verdict={roiTier(detail.roi).verdict}
+                    highlight={detail.roi >= 14}
+                  />
                   <MiniStat label="Cash flow est." value={`${formatCurrency(detail.cashFlow)}/mes`} />
                 </div>
 
@@ -271,7 +302,35 @@ function StageColumn({
         {deals.map((deal) => (
           <DraggableDealCard key={deal.id} deal={deal} onOpen={onOpen} />
         ))}
+        {deals.length === 0 && <EmptyColumnHint stage={stage} />}
       </div>
+    </div>
+  )
+}
+
+/** Estado vacío que enseña: tarjeta de muestra + pista de qué va aquí */
+function EmptyColumnHint({ stage }: { stage: DealStage }) {
+  return (
+    <div className="flex flex-1 flex-col gap-2">
+      {stage === "prospecto" && (
+        <div
+          aria-hidden="true"
+          className="rounded-xl border border-dashed border-border bg-card/60 p-3 opacity-75"
+        >
+          <p className="truncate text-[13px] font-medium text-muted-foreground">
+            Ej.: Casa 3h/2b, Bayamón
+          </p>
+          <div className="mt-2 flex items-center justify-between">
+            <span className="font-heading text-sm font-bold text-muted-foreground">
+              $165K
+            </span>
+            <Badge variant="success">12% ROI</Badge>
+          </div>
+        </div>
+      )}
+      <p className="px-2 py-3 text-center text-[11px] leading-relaxed text-muted-foreground/80">
+        {EMPTY_HINT[stage] ?? "Arrastra una tarjeta aquí."}
+      </p>
     </div>
   )
 }
@@ -304,7 +363,7 @@ function DraggableDealCard({
             {...listeners}
             {...attributes}
             className="cursor-grab touch-none text-muted-foreground/50 transition-colors hover:text-muted-foreground active:cursor-grabbing"
-            aria-label="Arrastrar"
+            aria-label={`Arrastrar ${deal.address}`}
           >
             <GripVertical className="size-4" />
           </button>
@@ -325,10 +384,11 @@ function DealCard({
   dragHandle?: React.ReactNode
   overlay?: boolean
 }) {
+  const tier = roiTier(deal.roi)
   return (
     <Card
       className={cn(
-        "transition-all",
+        "shadow-card transition-all",
         overlay ? "rotate-2 shadow-lift" : "hover:shadow-soft"
       )}
     >
@@ -342,22 +402,13 @@ function DealCard({
           </div>
           {dragHandle}
         </div>
-        <div className="mt-2.5 flex items-center justify-between">
+        <div className="mt-2.5 flex items-center justify-between gap-2">
           <span className="font-heading text-sm font-bold">
             {formatCompact(deal.askingPrice)}
           </span>
-          <span
-            className={cn(
-              "rounded-full px-2 py-0.5 text-[10px] font-semibold",
-              deal.roi >= 14
-                ? "bg-primary/10 text-primary"
-                : deal.roi >= 8
-                  ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
-                  : "bg-muted text-muted-foreground"
-            )}
-          >
-            {deal.roi}% ROI
-          </span>
+          <Badge variant={tier.variant}>
+            {deal.roi > 0 ? `${deal.roi}% ROI · ${tier.verdict}` : "ROI sin estimar"}
+          </Badge>
         </div>
         <div className="mt-1.5 flex items-center gap-2.5 text-[10px] text-muted-foreground">
           <span className="inline-flex items-center gap-1">
@@ -374,12 +425,27 @@ function DealCard({
   )
 }
 
-function StatCard({ label, value, sub }: { label: string; value: string; sub: string }) {
+function StatCard({
+  label,
+  value,
+  sub,
+  tone,
+}: {
+  label: string
+  value: string
+  sub: string
+  tone?: "good" | "neutral"
+}) {
   return (
-    <Card>
+    <Card className="shadow-card">
       <CardContent className="p-4">
         <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
-        <p className="mt-1 font-heading text-xl font-bold tracking-tight sm:text-2xl">
+        <p
+          className={cn(
+            "mt-1 font-heading text-xl font-bold tracking-tight sm:text-2xl",
+            tone === "good" && "text-success"
+          )}
+        >
           {value}
         </p>
         <p className="mt-0.5 text-[10px] text-muted-foreground">{sub}</p>
@@ -388,14 +454,29 @@ function StatCard({ label, value, sub }: { label: string; value: string; sub: st
   )
 }
 
-function MiniStat({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+function MiniStat({
+  label,
+  value,
+  verdict,
+  highlight,
+}: {
+  label: string
+  value: string
+  verdict?: string
+  highlight?: boolean
+}) {
   return (
-    <div className={cn("rounded-xl border border-border p-3", highlight && "border-primary/30 bg-primary/5")}>
+    <div className={cn("rounded-xl border border-border p-3", highlight && "border-success/30 bg-success-soft/50")}>
       <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
         {label}
       </p>
-      <p className={cn("mt-0.5 font-heading text-base font-bold", highlight && "text-primary")}>
+      <p className={cn("mt-0.5 font-heading text-base font-bold", highlight && "text-success")}>
         {value}
+        {verdict && (
+          <span className="ml-1.5 text-[10px] font-medium text-muted-foreground">
+            {verdict}
+          </span>
+        )}
       </p>
     </div>
   )
@@ -472,13 +553,16 @@ function AddDealDialog({
           <div className="space-y-1.5">
             <Label className="text-xs">ROI estimado (opcional)</Label>
             <Input type="number" value={roi} onChange={(e) => setRoi(e.target.value)} placeholder="12" />
+            <p className="text-[10px] text-muted-foreground">
+              Si no lo tienes, déjalo vacío — lo calculas después en la calculadora.
+            </p>
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs">Notas</Label>
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Contexto del deal…" />
           </div>
           <Button className="w-full" disabled={!canSave} onClick={save}>
-            <Pencil className="size-4" />
+            <Sparkles className="size-4" />
             Añadir como prospecto
           </Button>
         </div>

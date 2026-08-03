@@ -92,7 +92,10 @@ export function DataMoat() {
             <p className="text-xs font-semibold tracking-widest text-primary uppercase">
               El foso competitivo
             </p>
-            <h2 className="mt-3 font-heading text-3xl font-extrabold tracking-tight text-balance sm:text-[42px] sm:leading-[1.08]">
+            <h2
+              aria-label="La mitad de las ventas de PR no existe en internet"
+              className="mt-3 font-heading text-3xl font-extrabold tracking-tight text-balance sm:text-[42px] sm:leading-[1.08]"
+            >
               La mitad de las ventas de PR{" "}
               <span className="text-primary">no existe</span> en internet
             </h2>
@@ -135,18 +138,18 @@ export function DataMoat() {
                   transition={{ duration: 0.55, delay: i * 0.09, ease: [0.22, 1, 0.36, 1] }}
                   className={
                     s.exclusive
-                      ? "relative overflow-hidden rounded-2xl border border-primary/40 bg-primary/10 p-5"
+                      ? "relative overflow-hidden rounded-2xl border border-cash/50 bg-cash/10 p-5"
                       : "rounded-2xl border border-white/10 bg-white/[0.04] p-5"
                   }
                 >
                   {s.exclusive && (
-                    <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent" />
+                    <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-cash to-transparent" />
                   )}
                   <div className="flex items-start gap-4">
                     <div
                       className={
                         s.exclusive
-                          ? "flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary text-[#0c1a14]"
+                          ? "flex size-11 shrink-0 items-center justify-center rounded-xl bg-cash text-white"
                           : "flex size-11 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white/70"
                       }
                     >
@@ -160,7 +163,7 @@ export function DataMoat() {
                         <span
                           className={
                             s.exclusive
-                              ? "rounded-full bg-primary px-2 py-0.5 text-[9px] font-bold text-[#0c1a14]"
+                              ? "rounded-full bg-cash px-2 py-0.5 text-[9px] font-bold text-white"
                               : "rounded-full bg-white/10 px-2 py-0.5 text-[9px] font-semibold text-white/60"
                           }
                         >
@@ -256,10 +259,10 @@ export function CopilotFeature() {
                     Muéstrame el más barato y corre los números
                   </ChatBubble>
                   <ChatBubble role="assistant" delay={0.85}>
-                    <div className="rounded-xl border border-border bg-background p-3">
+                    <div className="rounded-xl border border-cash/30 bg-cash-soft p-3">
                       <div className="flex items-center gap-1.5">
-                        <BadgeCheck className="size-3 text-primary" />
-                        <span className="text-[9px] font-bold text-primary">
+                        <BadgeCheck className="size-3 text-cash" />
+                        <span className="text-[9px] font-bold tracking-wide text-cash">
                           CASH · EXCLUSIVO
                         </span>
                       </div>
@@ -294,7 +297,10 @@ export function CopilotFeature() {
             <p className="text-xs font-semibold tracking-widest text-primary uppercase">
               Copiloto AI
             </p>
-            <h2 className="mt-3 font-heading text-3xl font-extrabold tracking-tight text-balance sm:text-[42px] sm:leading-[1.08]">
+            <h2
+              aria-label="Un asistente que hace el trabajo, no solo contesta"
+              className="mt-3 font-heading text-3xl font-extrabold tracking-tight text-balance sm:text-[42px] sm:leading-[1.08]"
+            >
               Un asistente que hace el trabajo,{" "}
               <span className="text-primary">no solo contesta</span>
             </h2>

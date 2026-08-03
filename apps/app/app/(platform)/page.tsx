@@ -12,6 +12,7 @@ import {
   Plus,
   Search,
   Sparkles,
+  TrendingDown,
   TrendingUp,
 } from "lucide-react"
 
@@ -30,6 +31,8 @@ import {
 import { Button, Card, CardContent, CardHeader, CardTitle, cn } from "@cancel/ui"
 
 import { Sparkline } from "@/components/charts"
+import { SectionHeader } from "@/components/section-header"
+import { SourceChip } from "@/components/source-chip"
 import { useAssistantStore } from "@/lib/stores/assistant"
 import { usePipelineStore } from "@/lib/stores/pipeline"
 import { useUserStore } from "@/lib/stores/user"
@@ -68,28 +71,32 @@ export default function DashboardPage() {
     {
       label: "Deals activos",
       value: String(activeDeals.length),
-      sub: `${closingDeals} cerrando este mes`,
+      helper:
+        closingDeals > 0
+          ? `Propiedades que estás evaluando — ${closingDeals} ya en cierre`
+          : "Propiedades que estás evaluando o negociando",
       icon: KanbanSquare,
       href: "/deals",
     },
     {
       label: "Valor del pipeline",
       value: formatCompact(pipelineValue),
-      sub: "en propiedades por analizar",
+      helper: "Lo que suman tus deals activos al precio pedido",
       icon: Building2,
       href: "/deals",
     },
     {
       label: "Cash deals reportados",
       value: String(marketStats.cashDealsThisMonth),
-      sub: "este mes · data exclusiva",
+      helper: "Ventas en cash de este mes que solo ves aquí",
       icon: BadgeDollarSign,
       href: "/comparables",
+      cash: true,
     },
     {
       label: "Comparables nuevos",
       value: `+${marketStats.newThisWeek}`,
-      sub: "esta semana",
+      helper: "Propiedades añadidas esta semana a tu mercado",
       icon: TrendingUp,
       href: "/comparables",
     },
@@ -97,7 +104,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8 animate-fade-in">
-      {/* Saludo */}
+      {/* Saludo + acción principal */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h2 className="font-heading text-2xl font-bold tracking-tight sm:text-[28px]">
@@ -113,18 +120,18 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => router.push("/comparables")}>
+          <Button size="sm" onClick={() => router.push("/comparables")}>
             <Search className="size-3.5" />
             Buscar comparables
           </Button>
-          <Button size="sm" onClick={() => router.push("/deals")}>
+          <Button variant="outline" size="sm" onClick={() => router.push("/deals")}>
             <Plus className="size-3.5" />
             Nuevo deal
           </Button>
         </div>
       </div>
 
-      {/* KPIs */}
+      {/* KPIs — con explicación en palabras sencillas */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {kpis.map((kpi) => (
           <Link key={kpi.label} href={kpi.href}>
@@ -134,13 +141,25 @@ export default function DashboardPage() {
                   <p className="text-xs font-medium text-muted-foreground">
                     {kpi.label}
                   </p>
-                  <kpi.icon className="size-4 text-primary" />
+                  <span
+                    className={cn(
+                      "flex size-7 items-center justify-center rounded-lg",
+                      kpi.cash ? "bg-cash-soft" : "bg-primary/10"
+                    )}
+                  >
+                    <kpi.icon
+                      className={cn(
+                        "size-3.5",
+                        kpi.cash ? "text-cash" : "text-primary"
+                      )}
+                    />
+                  </span>
                 </div>
                 <p className="mt-2 font-heading text-2xl font-bold tracking-tight sm:text-3xl">
                   {kpi.value}
                 </p>
-                <p className="mt-0.5 text-[11px] text-muted-foreground">
-                  {kpi.sub}
+                <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
+                  {kpi.helper}
                 </p>
               </CardContent>
             </Card>
@@ -150,15 +169,13 @@ export default function DashboardPage() {
 
       {/* Pulso del mercado */}
       <section>
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="font-heading text-base font-bold">Pulso del mercado</h3>
-          <Link
-            href="/comparables"
-            className="text-xs font-medium text-primary hover:underline"
-          >
-            Explorar zonas →
-          </Link>
-        </div>
+        <SectionHeader
+          icon={TrendingUp}
+          title="Pulso del mercado"
+          description="Cómo se están moviendo los precios en las zonas que sigues"
+          href="/comparables"
+          actionLabel="Explorar zonas"
+        />
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {pulseZones.map((z) => (
             <Link key={z!.id} href={`/comparables?zona=${z!.id}`}>
@@ -173,12 +190,19 @@ export default function DashboardPage() {
                     </div>
                     <span
                       className={cn(
-                        "rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold",
                         z!.yoyChange >= 5
-                          ? "bg-primary/10 text-primary"
-                          : "bg-muted text-muted-foreground"
+                          ? "bg-success-soft text-success"
+                          : z!.yoyChange < 0
+                            ? "bg-warning-soft text-warning"
+                            : "bg-muted text-muted-foreground"
                       )}
                     >
+                      {z!.yoyChange < 0 ? (
+                        <TrendingDown className="size-3" aria-hidden />
+                      ) : (
+                        <TrendingUp className="size-3" aria-hidden />
+                      )}
                       {formatSigned(z!.yoyChange)}
                     </span>
                   </div>
@@ -206,25 +230,22 @@ export default function DashboardPage() {
       <div className="grid gap-6 lg:grid-cols-5">
         {/* Sugerencias del copiloto */}
         <section className="lg:col-span-3">
-          <div className="mb-3 flex items-center gap-2">
-            <Sparkles className="size-4 text-primary" />
-            <h3 className="font-heading text-base font-bold">
-              Para tu radar
-            </h3>
-          </div>
+          <SectionHeader
+            icon={Sparkles}
+            title="Para tu radar"
+            description="Oportunidades frescas que vale la pena mirar hoy"
+          />
           <div className="space-y-3">
             {cheapestCash.map((p) => (
               <Card
                 key={p.id}
-                className="group cursor-pointer transition-all hover:border-primary/30 hover:shadow-soft"
+                className="group cursor-pointer transition-all hover:border-cash/40 hover:shadow-soft"
                 onClick={() => router.push("/comparables")}
               >
                 <CardContent className="flex items-center justify-between gap-4 p-4">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                        Cash · Exclusivo
-                      </span>
+                      <SourceChip source="cash" verified={p.verified} />
                       <span className="text-[11px] text-muted-foreground">
                         {p.city}
                       </span>
@@ -237,20 +258,21 @@ export default function DashboardPage() {
                       est. {formatCurrency(p.estimatedRent)}/mes
                     </p>
                   </div>
-                  <ArrowUpRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-primary" />
+                  <ArrowUpRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-cash" />
                 </CardContent>
               </Card>
             ))}
             {newestListings.map((p) => (
               <Card
                 key={p.id}
-                className="group cursor-pointer transition-all hover:border-primary/30 hover:shadow-soft"
+                className="group cursor-pointer transition-all hover:border-info/40 hover:shadow-soft"
                 onClick={() => router.push("/comparables")}
               >
                 <CardContent className="flex items-center justify-between gap-4 p-4">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-semibold text-blue-600 dark:text-blue-400">
+                      <span className="inline-flex items-center gap-1 rounded-full border border-info/30 bg-info-soft px-2 py-0.5 text-[10px] font-semibold text-info">
+                        <span className="size-1.5 rounded-full bg-info animate-pulse-dot" aria-hidden />
                         Recién listada · {p.daysOnMarket}d
                       </span>
                       <span className="text-[11px] text-muted-foreground">
@@ -265,16 +287,29 @@ export default function DashboardPage() {
                       pregúntale al copiloto si vale la pena
                     </p>
                   </div>
-                  <ArrowUpRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-primary" />
+                  <ArrowUpRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-info" />
                 </CardContent>
               </Card>
             ))}
+
+            {/* Entrada al copiloto — cálida y clara */}
             <button
               onClick={() => openAssistant(true)}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-primary/30 bg-primary/5 px-4 py-3.5 text-sm font-medium text-primary transition-colors hover:bg-primary/10"
+              className="group flex w-full items-center gap-3.5 rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/8 to-transparent p-4 text-left transition-all outline-none hover:border-primary/40 hover:shadow-soft focus-visible:ring-2 focus-visible:ring-ring/40"
             >
-              <Sparkles className="size-4" />
-              Pídele al copiloto que analice algo por ti
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 transition-colors group-hover:bg-primary/15">
+                <Sparkles className="size-4.5 text-primary" />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold">
+                  ¿No sabes por dónde empezar?
+                </span>
+                <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">
+                  Pregúntale al copiloto — “¿cuánto cash flow da una casa de
+                  $150K en Bayamón?” — y te lo explica en palabras sencillas.
+                </span>
+              </span>
+              <ArrowRight className="ml-auto size-4 shrink-0 text-primary transition-transform group-hover:translate-x-0.5" />
             </button>
           </div>
         </section>
@@ -282,15 +317,13 @@ export default function DashboardPage() {
         {/* Pipeline + actividad */}
         <div className="space-y-6 lg:col-span-2">
           <section>
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="font-heading text-base font-bold">Tu pipeline</h3>
-              <Link
-                href="/deals"
-                className="text-xs font-medium text-primary hover:underline"
-              >
-                Ver todo →
-              </Link>
-            </div>
+            <SectionHeader
+              icon={KanbanSquare}
+              title="Tu pipeline"
+              description="Tus deals y en qué etapa va cada uno"
+              href="/deals"
+              actionLabel="Ver todo"
+            />
             <Card>
               <CardContent className="divide-y divide-border p-0">
                 {deals.slice(0, 4).map((deal) => (
@@ -315,17 +348,19 @@ export default function DashboardPage() {
           </section>
 
           <section>
-            <h3 className="mb-3 font-heading text-base font-bold">
-              Actividad de la red
-            </h3>
+            <SectionHeader
+              title="Actividad de la red"
+              description="Lo que otros inversionistas y realtors están reportando"
+            />
             <div className="space-y-2.5">
               {recentActivity.slice(0, 5).map((a) => (
                 <div key={a.id} className="flex items-start gap-2.5 text-[13px]">
                   <span
                     className={cn(
                       "mt-1.5 size-1.5 shrink-0 rounded-full",
-                      a.type === "cash" ? "bg-primary" : "bg-muted-foreground/40"
+                      a.type === "cash" ? "bg-cash" : "bg-muted-foreground/40"
                     )}
+                    aria-hidden
                   />
                   <div className="min-w-0">
                     <p className="leading-snug text-foreground/85">{a.message}</p>
@@ -345,8 +380,9 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="pb-4">
               <p className="text-xs leading-relaxed text-muted-foreground">
-                Corre cap rate, cash-on-cash y break-even en 30 segundos — para
-                alquiler, flip o Airbnb.
+                Entra el precio y la renta — en 30 segundos te dice si el deal
+                tiene sentido, en palabras sencillas. Para alquiler, flip o
+                Airbnb.
               </p>
               <Button
                 size="sm"
@@ -372,9 +408,9 @@ export function StageChip({ stage }: { stage: string }) {
       className={cn(
         "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold",
         idx >= 4
-          ? "bg-primary/10 text-primary"
+          ? "bg-success-soft text-success"
           : idx >= 2
-            ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+            ? "bg-warning-soft text-warning"
             : "bg-muted text-muted-foreground"
       )}
     >

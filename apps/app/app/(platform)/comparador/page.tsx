@@ -2,7 +2,15 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { Plus, Search, Trophy, X } from "lucide-react"
+import {
+  CircleHelp,
+  Plus,
+  Search,
+  Scale,
+  Sparkles,
+  Trophy,
+  X,
+} from "lucide-react"
 
 import {
   formatCompact,
@@ -15,6 +23,11 @@ import {
   type Property,
 } from "@cancel/data"
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+  Badge,
   Button,
   Card,
   CardContent,
@@ -84,6 +97,12 @@ function scoreProperties(list: Property[], w: Weights) {
   })
 }
 
+/** Contexto en español llano para cada número — responde "¿y eso es bueno?" */
+function yieldVerdict(y: number): { text: string; good: boolean } {
+  if (y >= 8) return { text: "por encima del típico en PR (8%)", good: true }
+  return { text: "por debajo del típico en PR (8%)", good: false }
+}
+
 export default function ComparadorPage() {
   const { compareIds, toggleCompare } = useSavedStore()
   const [weights, setWeights] = React.useState<Weights>({
@@ -98,9 +117,16 @@ export default function ComparadorPage() {
     .map(propertyById)
     .filter(Boolean) as Property[]
   const scored = React.useMemo(() => scoreProperties(list, weights), [list, weights])
-  const bestId = scored.length > 1 ? scored.reduce((a, b) => (a.score >= b.score ? a : b)).p.id : null
+  const best = scored.length > 1 ? scored.reduce((a, b) => (a.score >= b.score ? a : b)) : null
+  const bestId = best?.p.id ?? null
 
   if (list.length === 0) return <EmptyState />
+
+  const bestZone = best ? zoneById(best.p.zone) : null
+  const bestVsZone =
+    best && bestZone
+      ? Math.round(((best.p.pricePerSqFt - bestZone.medianPpsf) / bestZone.medianPpsf) * 100)
+      : null
 
   const rows: { label: string; render: (p: Property) => React.ReactNode }[] = [
     { label: "Precio", render: (p) => <strong>{formatCurrency(p.price)}</strong> },
@@ -110,8 +136,13 @@ export default function ComparadorPage() {
         if (!z) return "—"
         const diff = Math.round(((p.pricePerSqFt - z.medianPpsf) / z.medianPpsf) * 100)
         return (
-          <span className={diff <= 0 ? "font-semibold text-primary" : "text-amber-600 dark:text-amber-400"}>
-            {diff > 0 ? "+" : ""}{diff}%
+          <span className="inline-flex flex-wrap items-center gap-x-1.5">
+            <Badge variant={diff <= 0 ? "success" : "warning"}>
+              {diff > 0 ? "+" : ""}{diff}%
+            </Badge>
+            <span className="text-[10px] text-muted-foreground">
+              {diff <= 0 ? "bajo la zona" : "sobre la zona"}
+            </span>
           </span>
         )
       } },
@@ -120,20 +151,60 @@ export default function ComparadorPage() {
     { label: "Año", render: (p) => p.yearBuilt },
     { label: "Condición", render: (p) => p.condition },
     { label: "Renta estimada", render: (p) => `${formatCurrency(p.estimatedRent)}/mes` },
-    { label: "Yield bruto", render: (p) => `${grossYield(p).toFixed(1)}%` },
-    { label: "Días en mercado", render: (p) => `${p.daysOnMarket}d` },
-    { label: "Fuente", render: (p) => (
-        <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold", p.source === "cash" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>
-          {sourceMeta[p.source].label}
+    { label: "Yield bruto", render: (p) => {
+        const y = grossYield(p)
+        const v = yieldVerdict(y)
+        return (
+          <span className="inline-flex flex-wrap items-center gap-x-1.5">
+            <Badge variant={v.good ? "success" : "warning"}>{y.toFixed(1)}%</Badge>
+            <span className="text-[10px] text-muted-foreground">{v.text}</span>
+          </span>
+        )
+      } },
+    { label: "Días en mercado", render: (p) => (
+        <span>
+          {p.daysOnMarket}d{" "}
+          <span className="text-[10px] text-muted-foreground">
+            {p.daysOnMarket <= 30 ? "· se mueve rápido" : p.daysOnMarket <= 60 ? "· ritmo normal" : "· lento, hay espacio pa' negociar"}
+          </span>
         </span>
+      ) },
+    { label: "Fuente", render: (p) => (
+        <Badge variant={p.source === "cash" ? "cash" : "outline"}>
+          {sourceMeta[p.source].short}
+          {p.source === "cash" && " · Exclusivo"}
+        </Badge>
       ) },
     { label: "Fecha", render: (p) => formatDateShort(p.date) },
   ]
 
   return (
     <div className="space-y-5 animate-fade-in">
+      {/* Veredicto primero — la recomendación en español llano */}
+      {best && (
+        <Card className="border-success/30 bg-success-soft/60 shadow-card">
+          <CardContent className="flex items-start gap-3.5 p-4 sm:p-5">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-success text-success-foreground">
+              <Trophy className="size-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-balance">
+                Nuestra recomendación: {best.p.address}
+              </p>
+              <p className="mt-0.5 text-[12px] leading-relaxed text-muted-foreground">
+                Score {best.score}/100 con tus prioridades
+                {bestVsZone !== null && bestVsZone < 0 && (
+                  <> · {Math.abs(bestVsZone)}% bajo la mediana de {bestZone?.name}</>
+                )}
+                <> · yield {best.roi.toFixed(1)}%</>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Pesos del scoring */}
-      <Card>
+      <Card className="shadow-card">
         <CardContent className="p-4 sm:p-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm font-semibold">¿Qué pesa más para ti?</p>
@@ -156,6 +227,7 @@ export default function ComparadorPage() {
                   max={60}
                   step={5}
                   className="mt-2"
+                  aria-label={w.label}
                 />
                 <p className="mt-1 text-[10px] leading-snug text-muted-foreground">
                   {w.hint}
@@ -163,6 +235,41 @@ export default function ComparadorPage() {
               </div>
             ))}
           </div>
+
+          {/* Transparencia: cómo se calcula el score */}
+          <Accordion type="single" collapsible className="mt-3 rounded-xl border border-border bg-muted/40 px-3.5">
+            <AccordionItem value="como" className="border-b-0">
+              <AccordionTrigger className="py-3 text-[12px] font-medium hover:no-underline">
+                <span className="inline-flex items-center gap-2">
+                  <CircleHelp className="size-3.5 text-primary" />
+                  ¿Cómo lo calculamos?
+                </span>
+              </AccordionTrigger>
+              <AccordionContent className="pb-3.5">
+                <ol className="space-y-2 text-[12px] leading-relaxed text-muted-foreground">
+                  <li className="flex gap-2">
+                    <span className="font-semibold text-foreground">1.</span>
+                    Medimos las 4 cosas que importan: precio vs. la zona, retorno
+                    estimado, condición y qué tan rápido se vende.
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="font-semibold text-foreground">2.</span>
+                    Cada métrica se escala de 0 a 100 comparando solo las
+                    propiedades que tienes en la mesa — la mejor saca 100.
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="font-semibold text-foreground">3.</span>
+                    Tus sliders deciden cuánto pesa cada una. El score es la suma
+                    con esos pesos. Sin caja negra.
+                  </li>
+                </ol>
+                <p className="mt-2.5 rounded-lg bg-card p-2.5 text-[11px] leading-relaxed text-muted-foreground">
+                  Es una ayuda para decidir, no una tasación. Antes de ofertar,
+                  valida con inspección y los comparables de la zona.
+                </p>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </CardContent>
       </Card>
 
@@ -178,17 +285,17 @@ export default function ComparadorPage() {
             <Card
               key={p.id}
               className={cn(
-                "relative overflow-hidden",
-                p.id === bestId && "border-primary/50 shadow-soft"
+                "relative overflow-hidden shadow-card",
+                p.id === bestId && "border-success/50 shadow-soft"
               )}
             >
               {p.id === bestId && (
-                <div className="absolute inset-x-0 top-0 flex items-center justify-center gap-1 bg-primary py-1 text-[10px] font-bold text-primary-foreground">
+                <div className="absolute inset-x-0 top-0 flex items-center justify-center gap-1.5 bg-success py-1.5 text-[10px] font-bold tracking-wide text-success-foreground">
                   <Trophy className="size-3" />
-                  MEJOR DEAL
+                  MEJOR DEAL — TE LO RECOMENDAMOS
                 </div>
               )}
-              <CardContent className={cn("p-4", p.id === bestId && "pt-8")}>
+              <CardContent className={cn("p-4", p.id === bestId && "pt-9")}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="truncate text-[13px] font-semibold">{p.address}</p>
@@ -197,7 +304,7 @@ export default function ComparadorPage() {
                   <button
                     onClick={() => toggleCompare(p.id)}
                     className="text-muted-foreground transition-colors hover:text-foreground"
-                    aria-label="Quitar"
+                    aria-label={`Quitar ${p.address}`}
                   >
                     <X className="size-3.5" />
                   </button>
@@ -205,7 +312,10 @@ export default function ComparadorPage() {
                 <div className="mt-3 flex items-end justify-between">
                   <p className="font-heading text-lg font-bold">{formatCompact(p.price)}</p>
                   <div className="text-right">
-                    <p className="font-heading text-2xl font-extrabold text-primary">
+                    <p className={cn(
+                      "font-heading text-2xl font-extrabold",
+                      p.id === bestId ? "text-success" : "text-foreground"
+                    )}>
                       {score}
                     </p>
                     <p className="text-[9px] font-medium tracking-wide text-muted-foreground uppercase">
@@ -216,7 +326,7 @@ export default function ComparadorPage() {
                 {/* Barra de score */}
                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
                   <div
-                    className={cn("h-full rounded-full", p.id === bestId ? "bg-primary" : "bg-muted-foreground/40")}
+                    className={cn("h-full rounded-full", p.id === bestId ? "bg-success" : "bg-muted-foreground/40")}
                     style={{ width: `${score}%` }}
                   />
                 </div>
@@ -244,7 +354,7 @@ export default function ComparadorPage() {
                   key={p.id}
                   className={cn(
                     "flex items-center border-t border-border px-4 py-3 text-[13px]",
-                    p.id === bestId && "bg-primary/[0.04]"
+                    p.id === bestId && "bg-success/[0.05]"
                   )}
                 >
                   {row.render(p)}
@@ -258,10 +368,6 @@ export default function ComparadorPage() {
         </div>
       </div>
 
-      <p className="text-center text-[11px] text-muted-foreground">
-        El score normaliza cada métrica entre las propiedades seleccionadas y aplica tus pesos.
-      </p>
-
       {/* Dialog añadir */}
       <AddPropertyDialog open={addOpen} onOpenChange={setAddOpen} />
     </div>
@@ -270,18 +376,41 @@ export default function ComparadorPage() {
 
 function EmptyState() {
   return (
-    <Card className="border-dashed">
-      <CardContent className="flex flex-col items-center gap-3 py-20 text-center">
-        <div className="flex size-14 items-center justify-center rounded-2xl bg-primary/10">
-          <Trophy className="size-6 text-primary" />
+    <Card className="border-dashed shadow-card">
+      <CardContent className="flex flex-col items-center gap-4 py-16 text-center sm:py-20">
+        <div className="flex size-14 items-center justify-center rounded-2xl bg-success-soft">
+          <Scale className="size-6 text-success" />
         </div>
-        <h3 className="font-heading text-lg font-bold">Nada que comparar todavía</h3>
-        <p className="max-w-sm text-sm text-muted-foreground">
-          Ve al buscador de comparables y toca <strong>Comparar</strong> en hasta{" "}
-          {MAX_COMPARE} propiedades. Aquí las ponemos lado a lado con un score
-          automático.
-        </p>
-        <Button asChild className="mt-2">
+        <div>
+          <h3 className="font-heading text-lg font-bold">Pon dos o más propiedades cara a cara</h3>
+          <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
+            En el buscador de comparables toca <strong>Comparar</strong> en hasta{" "}
+            {MAX_COMPARE} propiedades y aquí te decimos cuál es la mejor jugada,
+            con el score explicado paso a paso.
+          </p>
+        </div>
+
+        {/* Muestra de cómo se verá */}
+        <div className="flex items-end gap-3" aria-hidden="true">
+          {[62, 88, 45].map((h, i) => (
+            <div key={i} className="flex w-16 flex-col items-center gap-1.5">
+              <div className="flex h-20 w-full items-end rounded-lg bg-muted/70 p-1">
+                <div
+                  className={cn(
+                    "w-full rounded-md",
+                    i === 1 ? "bg-success/70" : "bg-muted-foreground/25"
+                  )}
+                  style={{ height: `${h}%` }}
+                />
+              </div>
+              <span className={cn("text-[10px] font-semibold", i === 1 ? "text-success" : "text-muted-foreground")}>
+                {i === 1 ? "Mejor" : "—"}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <Button asChild className="mt-1">
           <Link href="/comparables">
             <Search className="size-4" />
             Buscar comparables
@@ -314,7 +443,10 @@ function AddPropertyDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Añadir al comparador</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Sparkles className="size-4 text-primary" />
+            Añadir al comparador
+          </DialogTitle>
         </DialogHeader>
         <Input
           value={q}

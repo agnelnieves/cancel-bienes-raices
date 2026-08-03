@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import {
+  ArrowRight,
   BadgeCheck,
   Building,
   CircleDollarSign,
@@ -310,68 +311,98 @@ export default function CalculadoraPage() {
 
         {/* ------------------------------ RESULTADOS ------------------------------ */}
         <div className="space-y-4 lg:col-span-3">
-          {/* Número principal */}
+          {/* Veredicto en lenguaje sencillo — lo primero que ve el usuario */}
           <Card
             className={cn(
               "border-2",
-              verdict.tone === "great" && "border-primary/40 bg-gradient-to-br from-primary/8 to-transparent",
-              verdict.tone === "ok" && "border-amber-500/30",
-              verdict.tone === "bad" && "border-destructive/30"
+              verdict.tone === "great" && "border-success/40 bg-gradient-to-br from-success/10 to-transparent",
+              verdict.tone === "ok" && "border-warning/40 bg-gradient-to-br from-warning/8 to-transparent",
+              verdict.tone === "bad" && "border-destructive/30 bg-gradient-to-br from-destructive/6 to-transparent"
             )}
           >
-            <CardContent className="flex flex-wrap items-center justify-between gap-4 p-5">
-              <div>
-                <p className="text-xs font-medium text-muted-foreground">
-                  {mode === "flip" ? "Ganancia neta estimada" : "Cash flow mensual"}
-                </p>
-                <p
-                  className={cn(
-                    "font-heading text-4xl font-extrabold tracking-tight",
-                    (mode === "flip" ? flip.netProfit : rental.cashFlowMonthly) < 0 &&
-                      "text-destructive"
-                  )}
-                >
-                  {mode === "flip"
-                    ? formatCurrency(flip.netProfit)
-                    : formatCurrency(
-                        mode === "airbnb"
-                          ? Math.round(str.netMonthly - rental.expensesMonthly)
-                          : rental.cashFlowMonthly
-                      )}
-                  {mode !== "flip" && (
-                    <span className="text-base font-medium text-muted-foreground">
-                      /mes
+            <CardContent className="p-5">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="min-w-0 flex-1">
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold tracking-wide",
+                      verdict.tone === "great" && "bg-success-soft text-success",
+                      verdict.tone === "ok" && "bg-warning-soft text-warning",
+                      verdict.tone === "bad" && "bg-destructive/10 text-destructive"
+                    )}
+                  >
+                    {verdict.tone === "great" && <TrendingUp className="size-3.5" />}
+                    {verdict.word}
+                  </span>
+                  <p className="mt-2.5 text-[13px] leading-relaxed text-muted-foreground">
+                    {verdict.why}
+                  </p>
+                  <p className="mt-2 flex items-start gap-1.5 text-[13px] font-medium">
+                    <ArrowRight className="mt-0.5 size-4 shrink-0 text-primary" />
+                    <span>
+                      <span className="text-muted-foreground">Próximo paso: </span>
+                      {verdict.next}
                     </span>
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    {mode === "flip" ? "Ganancia neta estimada" : "Cash flow mensual"}
+                  </p>
+                  <p
+                    className={cn(
+                      "font-heading text-4xl font-extrabold tracking-tight",
+                      (mode === "flip" ? flip.netProfit : rental.cashFlowMonthly) < 0 &&
+                        "text-destructive"
+                    )}
+                  >
+                    {mode === "flip"
+                      ? formatCurrency(flip.netProfit)
+                      : formatCurrency(
+                          mode === "airbnb"
+                            ? Math.round(str.netMonthly - rental.expensesMonthly)
+                            : rental.cashFlowMonthly
+                        )}
+                    {mode !== "flip" && (
+                      <span className="text-base font-medium text-muted-foreground">
+                        /mes
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {/* Detalle para el que quiere los números */}
+              <details className="group mt-4 border-t border-border pt-3">
+                <summary className="flex cursor-pointer list-none items-center gap-1.5 text-[12px] font-medium text-muted-foreground outline-none transition-colors select-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40 [&::-webkit-details-marker]:hidden">
+                  <ArrowRight className="size-3.5 transition-transform group-open:rotate-90" />
+                  Ver los números
+                </summary>
+                <div className="mt-3 grid grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-4">
+                  {mode === "flip" ? (
+                    <>
+                      <BigMetric label="ROI del deal" value={`${flip.roi.toFixed(1)}%`} />
+                      <BigMetric label="ROI anualizado" value={`${flip.annualizedRoi.toFixed(0)}%`} />
+                      <BigMetric label="Inversión total" value={formatCurrency(flip.totalInvestment)} />
+                      <BigMetric label="Venta break-even" value={formatCurrency(Math.round(flip.breakEvenSale))} />
+                    </>
+                  ) : (
+                    <>
+                      <BigMetric label="Cap rate" value={`${rental.capRate.toFixed(1)}%`} />
+                      <BigMetric label="Cash-on-cash" value={`${rental.cashOnCash.toFixed(1)}%`} />
+                      <BigMetric label="Cash necesario" value={formatCurrency(rental.cashNeeded)} />
+                      <BigMetric
+                        label="Break-even"
+                        value={
+                          rental.breakEvenMonths
+                            ? `${Math.floor(rental.breakEvenMonths / 12)}a ${rental.breakEvenMonths % 12}m`
+                            : "—"
+                        }
+                      />
+                    </>
                   )}
-                </p>
-                <p className="mt-1 text-xs font-medium text-muted-foreground">
-                  {verdict.label}
-                </p>
-              </div>
-              <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-right">
-                {mode === "flip" ? (
-                  <>
-                    <BigMetric label="ROI del deal" value={`${flip.roi.toFixed(1)}%`} />
-                    <BigMetric label="ROI anualizado" value={`${flip.annualizedRoi.toFixed(0)}%`} />
-                    <BigMetric label="Inversión total" value={formatCurrency(flip.totalInvestment)} />
-                    <BigMetric label="Venta break-even" value={formatCurrency(Math.round(flip.breakEvenSale))} />
-                  </>
-                ) : (
-                  <>
-                    <BigMetric label="Cap rate" value={`${rental.capRate.toFixed(1)}%`} />
-                    <BigMetric label="Cash-on-cash" value={`${rental.cashOnCash.toFixed(1)}%`} />
-                    <BigMetric label="Cash necesario" value={formatCurrency(rental.cashNeeded)} />
-                    <BigMetric
-                      label="Break-even"
-                      value={
-                        rental.breakEvenMonths
-                          ? `${Math.floor(rental.breakEvenMonths / 12)}a ${rental.breakEvenMonths % 12}m`
-                          : "—"
-                      }
-                    />
-                  </>
-                )}
-              </div>
+                </div>
+              </details>
             </CardContent>
           </Card>
 
@@ -583,13 +614,57 @@ function Row({
   )
 }
 
-function getVerdict(mode: CalcMode, coc: number, flipRoi: number) {
+interface Verdict {
+  tone: "great" | "ok" | "bad"
+  /** Veredicto en palabras sencillas para alguien que no es técnico */
+  word: string
+  /** Una frase que explica el porqué */
+  why: string
+  /** La acción siguiente sugerida */
+  next: string
+}
+
+function getVerdict(mode: CalcMode, coc: number, flipRoi: number): Verdict {
   if (mode === "flip") {
-    if (flipRoi >= 20) return { tone: "great" as const, label: "🔥 Deal brutal — margen saludable para un flip" }
-    if (flipRoi >= 12) return { tone: "ok" as const, label: "Deal decente — aprieta la compra o la remodelación" }
-    return { tone: "bad" as const, label: "Margen flojo — negocia el precio o pasa al siguiente" }
+    if (flipRoi >= 20)
+      return {
+        tone: "great",
+        word: "Sí tiene sentido",
+        why: "El margen es saludable para un flip en PR — hay espacio para imprevistos.",
+        next: "Coordina una visita y valida el costo de la remodelación con un contratista.",
+      }
+    if (flipRoi >= 12)
+      return {
+        tone: "ok",
+        word: "Analízala bien",
+        why: "El margen es justo — un imprevisto en la remodelación te lo puede comer.",
+        next: "Aprieta el precio de compra o baja el presupuesto de remodelación.",
+      }
+    return {
+      tone: "bad",
+      word: "Déjala pasar",
+      why: "El margen es muy fino para el riesgo y el trabajo de un flip.",
+      next: "Negocia un precio mucho menor o busca otra propiedad.",
+    }
   }
-  if (coc >= 10) return { tone: "great" as const, label: "🔥 Cash-on-cash brutal para PR — este deal merece un segundo vistazo" }
-  if (coc >= 6) return { tone: "ok" as const, label: "Retorno decente — compara con otros deals de la zona" }
-  return { tone: "bad" as const, label: "Retorno bajo — ajusta precio, renta o gastos" }
+  if (coc >= 10)
+    return {
+      tone: "great",
+      word: "Sí tiene sentido",
+      why: "El retorno sobre tu cash es fuerte para el mercado de PR.",
+      next: "Coordina una visita y confirma la renta con los comparables de la zona.",
+    }
+  if (coc >= 6)
+    return {
+      tone: "ok",
+      word: "Analízala bien",
+      why: "El retorno es decente, pero no deja mucho colchón.",
+      next: "Compara con otros deals de la zona y ajusta precio o renta.",
+    }
+  return {
+    tone: "bad",
+    word: "Déjala pasar",
+    why: "El retorno es bajo para lo que cuesta mover el dinero.",
+    next: "Ajusta el precio, sube la renta o baja los gastos — o busca otra.",
+  }
 }

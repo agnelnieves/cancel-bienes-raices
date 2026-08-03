@@ -17,3 +17,6 @@ pnpm dev
 ```
 
 Ver [AGENTS.md](./AGENTS.md) para arquitectura y convenciones.
+
+La planificación de lanzamiento, costos, investigación de viabilidad y demás
+documentación del producto vive en [docs/](./docs/README.md).

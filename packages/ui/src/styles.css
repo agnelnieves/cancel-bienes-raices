@@ -4,38 +4,51 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #fafaf8;
-  --foreground: #101f1a;
-  --card: #ffffff;
-  --card-foreground: #101f1a;
-  --popover: #ffffff;
-  --popover-foreground: #101f1a;
+  --background: #faf7f1; /* warm paper — más cálido que un gris SaaS */
+  --foreground: #232b26; /* warm charcoal */
+  --card: #fffdfa;
+  --card-foreground: #232b26;
+  --popover: #fffdfa;
+  --popover-foreground: #232b26;
   --primary: #1d9e75;
   --primary-foreground: #ffffff;
-  --secondary: #eff3f0;
-  --secondary-foreground: #16281f;
-  --muted: #f0f2ef;
-  --muted-foreground: #5a6b63;
+  --secondary: #f1ece2;
+  --secondary-foreground: #1e2a22;
+  --muted: #f1ede4;
+  --muted-foreground: #5d6a60;
   --accent: #e9f5f0;
   --accent-foreground: #0c3f2d;
   --destructive: #dc2626;
   --destructive-foreground: #ffffff;
-  --border: #e3e9e5;
-  --input: #e3e9e5;
+  --border: #e6dfd2; /* clay hairline */
+  --input: #e6dfd2;
   --ring: #1d9e75;
+  /* Acentos semánticos (estados y momentos de marca) */
+  --cash: #c4593a; /* terracota — SOLO para cash deals exclusivos (sello) */
+  --cash-foreground: #ffffff;
+  --cash-soft: #f6e6de; /* fondo suave para el sello/chip cash */
+  --info: #2563a8; /* "recién listada" / activo — azul calmado */
+  --info-foreground: #ffffff;
+  --info-soft: #e3edf7;
+  --warning: #b45309;
+  --warning-foreground: #ffffff;
+  --warning-soft: #fbeedd;
+  --success: #1d9e75;
+  --success-foreground: #ffffff;
+  --success-soft: #e9f5f0;
   --chart-1: #1d9e75;
   --chart-2: #7ac5aa;
   --chart-3: #b5ded0;
   --chart-4: #d9efe7;
   --chart-5: #8ca095;
   --radius: 0.75rem;
-  --sidebar: #f6f8f6;
-  --sidebar-foreground: #101f1a;
+  --sidebar: #f6f1e8;
+  --sidebar-foreground: #232b26;
   --sidebar-primary: #1d9e75;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #e9f5f0;
   --sidebar-accent-foreground: #0c3f2d;
-  --sidebar-border: #e3e9e5;
+  --sidebar-border: #e6dfd2;
   --sidebar-ring: #1d9e75;
 }
 
@@ -59,6 +72,19 @@
   --border: #1e2e26;
   --input: #223129;
   --ring: #2fbc8e;
+  /* Acentos semánticos — dark */
+  --cash: #e0765a;
+  --cash-foreground: #2a0f06;
+  --cash-soft: #311a13;
+  --info: #5a94d1;
+  --info-foreground: #081826;
+  --info-soft: #152635;
+  --warning: #e0922f;
+  --warning-foreground: #2a1c05;
+  --warning-soft: #2f2512;
+  --success: #2fbc8e;
+  --success-foreground: #04241a;
+  --success-soft: #143327;
   --chart-1: #2fbc8e;
   --chart-2: #5f9d87;
   --chart-3: #3d6e5f;
@@ -97,6 +123,18 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-cash: var(--cash);
+  --color-cash-foreground: var(--cash-foreground);
+  --color-cash-soft: var(--cash-soft);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-info-soft: var(--info-soft);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-soft: var(--warning-soft);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-soft: var(--success-soft);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -125,6 +163,8 @@
   --animate-fade-up: fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-fade-in: fade-in 0.4s ease both;
   --animate-typing: typing 1.2s ease-in-out infinite;
+  --animate-shimmer: shimmer 1.8s linear infinite;
+  --animate-pulse-dot: pulse-dot 2.2s ease-in-out infinite;
 
   @keyframes fade-up {
     from {
@@ -156,6 +196,25 @@
       opacity: 1;
     }
   }
+  @keyframes shimmer {
+    from {
+      background-position: -200% 0;
+    }
+    to {
+      background-position: 200% 0;
+    }
+  }
+  @keyframes pulse-dot {
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.5;
+      transform: scale(0.82);
+    }
+  }
 }
 
 @layer base {
@@ -174,6 +233,11 @@
 }
 
 @layer utilities {
+  .shadow-card {
+    box-shadow:
+      0 1px 2px rgb(16 31 26 / 0.05),
+      0 3px 12px -4px rgb(16 31 26 / 0.06);
+  }
   .shadow-soft {
     box-shadow:
       0 1px 2px rgb(16 31 26 / 0.04),
@@ -183,6 +247,21 @@
     box-shadow:
       0 2px 4px rgb(16 31 26 / 0.05),
       0 16px 40px -12px rgb(16 31 26 / 0.14);
+  }
+  .dark .shadow-card {
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 0.4),
+      0 3px 12px -4px rgb(0 0 0 / 0.35);
+  }
+  .dark .shadow-soft {
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 0.45),
+      0 6px 24px -8px rgb(0 0 0 / 0.4);
+  }
+  .dark .shadow-lift {
+    box-shadow:
+      0 2px 4px rgb(0 0 0 / 0.5),
+      0 16px 40px -12px rgb(0 0 0 / 0.55);
   }
   .text-balance {
     text-wrap: balance;

@@ -7,6 +7,7 @@ import {
   ArrowUpRight,
   BadgeCheck,
   GitCompareArrows,
+  HardHat,
   KanbanSquare,
   Landmark,
   Search,
@@ -30,7 +31,7 @@ export function ToolsBento() {
             Todo lo que necesitas para decidir si un deal vale la pena
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Cinco herramientas integradas entre sí — lo que encuentras en una,
+            Seis herramientas integradas entre sí — lo que encuentras en una,
             lo usas en todas.
           </p>
         </Reveal>
@@ -50,6 +51,12 @@ export function ToolsBento() {
           </Reveal>
           <Reveal className="md:col-span-2" delay={0.15}>
             <CreditoCell />
+          </Reveal>
+          <Reveal className="md:col-span-3" delay={0.2}>
+            <ContratistasCell />
+          </Reveal>
+          <Reveal className="md:col-span-3" delay={0.25}>
+            <EstimadorCell />
           </Reveal>
         </div>
       </div>
@@ -128,8 +135,8 @@ function ComparablesCell() {
           >
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <BadgeCheck className="size-3 shrink-0 text-primary" />
-                <span className="text-[9px] font-bold tracking-wide text-primary">
+                <BadgeCheck className="size-3 shrink-0 text-cash" />
+                <span className="text-[9px] font-bold tracking-wide text-cash">
                   CASH · EXCLUSIVO
                 </span>
                 <span className="text-[10px] text-muted-foreground">{p.city}</span>
@@ -384,6 +391,88 @@ function CreditoCell() {
           <span className="text-muted-foreground">
             Plan de jugada: <strong className="text-foreground">$40K</strong> distribuidos sin pasar del 30%
           </span>
+        </div>
+      </div>
+    </Cell>
+  )
+}
+
+// -------------------------------------------------------------- Contratistas
+
+function ContratistasCell() {
+  const pros = [
+    { name: "Ramos Construction", trade: "Remodelación", rating: "4.9", jobs: 41 },
+    { name: "TechosPR Solutions", trade: "Techos", rating: "4.9", jobs: 48 },
+    { name: "Aires del Caribe", trade: "Mini-splits", rating: "4.8", jobs: 29 },
+  ]
+  return (
+    <Cell
+      icon={HardHat}
+      title="Red de Contratistas"
+      description="Profesionales vetados por la comunidad — licencia y seguro verificados, con precios de referencia claros."
+    >
+      <div className="space-y-2 px-6 pb-6">
+        {pros.map((p) => (
+          <div
+            key={p.name}
+            className="flex items-center justify-between gap-3 rounded-xl border border-border bg-background p-3"
+          >
+            <div className="flex min-w-0 items-center gap-2.5">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[11px] font-bold text-primary">
+                {p.name.slice(0, 1)}
+              </span>
+              <div className="min-w-0">
+                <p className="flex items-center gap-1 truncate text-[11px] font-semibold">
+                  {p.name}
+                  <BadgeCheck className="size-3 shrink-0 text-primary" />
+                </p>
+                <p className="text-[10px] text-muted-foreground">{p.trade}</p>
+              </div>
+            </div>
+            <div className="shrink-0 text-right">
+              <p className="text-[11px] font-bold">★ {p.rating}</p>
+              <p className="text-[9px] text-muted-foreground">{p.jobs} trabajos</p>
+            </div>
+          </div>
+        ))}
+        <p className="pt-0.5 text-center text-[10px] text-muted-foreground">
+          El orden de los resultados no se vende — se gana con trabajos reales.
+        </p>
+      </div>
+    </Cell>
+  )
+}
+
+// ----------------------------------------------------------------- Estimador
+
+function EstimadorCell() {
+  const rows = [
+    { label: "Cocina completa", price: "$12.5K" },
+    { label: "2 baños", price: "$11.0K" },
+    { label: "Pisos · 1,200 pc", price: "$8.4K" },
+    { label: "Techo (sellado)", price: "$4.2K" },
+  ]
+  return (
+    <Cell
+      icon={GitCompareArrows}
+      title="Estimador de Remodelación"
+      description="Presupuesto por partida con precios reales de mano de obra de Puerto Rico."
+    >
+      <div className="space-y-2 px-6 pb-6">
+        {rows.map((r) => (
+          <div
+            key={r.label}
+            className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2 text-[11px]"
+          >
+            <span className="text-muted-foreground">{r.label}</span>
+            <span className="font-semibold">{r.price}</span>
+          </div>
+        ))}
+        <div className="flex items-center justify-between rounded-xl bg-primary/5 px-3 py-2.5">
+          <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+            Total estimado
+          </span>
+          <span className="font-heading text-sm font-extrabold text-primary">$39.7K</span>
         </div>
       </div>
     </Cell>
