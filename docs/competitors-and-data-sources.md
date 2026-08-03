@@ -1,5 +1,11 @@
 # Competitors & Data Sources: Strategic Research Document
 
+> **Historical research baseline.** This document was written in April 2026
+> and contains pricing, access and scraping assumptions that have not all been
+> revalidated. Do not use it as authorization to collect or redistribute data.
+> See the current [Puerto Rico feasibility study](./business/puerto-rico-feasibility.md)
+> and [launch cost model](./business/launch-costs.md).
+
 > **Project:** Real Estate Comparables & Investment Tools Platform
 > **Target Market:** Latino investors in Puerto Rico and the United States
 > **Date:** April 2026
