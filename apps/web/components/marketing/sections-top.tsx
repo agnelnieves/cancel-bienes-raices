@@ -163,8 +163,8 @@ export function DataMoat() {
                         <span
                           className={
                             s.exclusive
-                              ? "rounded-full bg-cash px-2 py-0.5 text-[9px] font-bold text-white"
-                              : "rounded-full bg-white/10 px-2 py-0.5 text-[9px] font-semibold text-white/60"
+                              ? "rounded-full bg-cash px-2 py-0.5 text-xs font-bold text-white"
+                              : "rounded-full bg-white/10 px-2 py-0.5 text-xs font-semibold text-white/60"
                           }
                         >
                           {s.tag.toUpperCase()}
@@ -262,7 +262,7 @@ export function CopilotFeature() {
                     <div className="rounded-xl border border-cash/30 bg-cash-soft p-3">
                       <div className="flex items-center gap-1.5">
                         <BadgeCheck className="size-3 text-cash" />
-                        <span className="text-[9px] font-bold tracking-wide text-cash">
+                        <span className="text-xs font-bold tracking-wide text-cash">
                           CASH · EXCLUSIVO
                         </span>
                       </div>

@@ -334,10 +334,10 @@ export default function CalculadoraPage() {
                     {verdict.tone === "great" && <TrendingUp className="size-3.5" />}
                     {verdict.word}
                   </span>
-                  <p className="mt-2.5 text-[13px] leading-relaxed text-muted-foreground">
+                  <p className="mt-2.5 text-sm leading-relaxed text-muted-foreground">
                     {verdict.why}
                   </p>
-                  <p className="mt-2 flex items-start gap-1.5 text-[13px] font-medium">
+                  <p className="mt-2 flex items-start gap-1.5 text-sm font-medium">
                     <ArrowRight className="mt-0.5 size-4 shrink-0 text-primary" />
                     <span>
                       <span className="text-muted-foreground">Próximo paso: </span>
@@ -491,9 +491,9 @@ export default function CalculadoraPage() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                    <XAxis dataKey="year" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
+                    <XAxis dataKey="year" tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
                     <YAxis
-                      tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
+                      tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
                       tickLine={false}
                       axisLine={false}
                       tickFormatter={(v: number) => `$${Math.round(v / 1000)}K`}
@@ -552,9 +552,13 @@ function NumberField({
   step?: number
   className?: string
 }) {
+  const id = React.useId()
   return (
     <div className={cn("space-y-1.5", className)}>
-      <Label className="text-[11px] font-medium text-muted-foreground">
+      <Label
+        htmlFor={id}
+        className="text-xs font-medium text-muted-foreground"
+      >
         {label}
       </Label>
       <div className="relative">
@@ -564,6 +568,7 @@ function NumberField({
           </span>
         )}
         <Input
+          id={id}
           type="number"
           value={value}
           step={step}
@@ -583,7 +588,7 @@ function NumberField({
 function BigMetric({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
         {label}
       </p>
       <p className="font-heading text-lg font-bold tracking-tight">{value}</p>
@@ -603,11 +608,21 @@ function Row({
   strong?: boolean
 }) {
   return (
-    <div className="flex items-center justify-between">
-      <span className={muted ? "text-muted-foreground" : strong ? "font-semibold" : ""}>
+    <div className="flex items-center justify-between gap-3">
+      <span
+        className={cn(
+          "min-w-0",
+          muted ? "text-muted-foreground" : strong ? "font-semibold" : ""
+        )}
+      >
         {label}
       </span>
-      <span className={strong ? "font-heading font-bold" : muted ? "text-muted-foreground" : "font-medium"}>
+      <span
+        className={cn(
+          "shrink-0 text-right tabular-nums",
+          strong ? "font-heading font-bold" : muted ? "text-muted-foreground" : "font-medium"
+        )}
+      >
         {value}
       </span>
     </div>

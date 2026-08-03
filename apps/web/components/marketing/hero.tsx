@@ -63,6 +63,15 @@ export function Hero() {
               no te enseñan
             </span>
           </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.14, ease }}
+            className="mx-auto mt-3 max-w-xl text-sm font-medium text-muted-foreground"
+          >
+            Un “comparable” es una casa parecida a la tuya que ya se vendió — su
+            precio real te dice cuánto vale la que estás mirando.
+          </motion.p>
 
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -169,7 +178,7 @@ export function Hero() {
                     >
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="inline-flex items-center gap-1 rounded-md bg-cash-soft px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-cash ring-1 ring-cash/30">
+                          <span className="inline-flex items-center gap-1 rounded-md bg-cash-soft px-2 py-0.5 text-xs font-bold tracking-wide text-cash ring-1 ring-cash/30">
                             <BadgeCheck className="size-2.5" />
                             CASH · EXCLUSIVO
                           </span>

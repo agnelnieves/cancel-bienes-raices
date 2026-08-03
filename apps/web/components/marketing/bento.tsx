@@ -136,7 +136,7 @@ function ComparablesCell() {
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <BadgeCheck className="size-3 shrink-0 text-cash" />
-                <span className="text-[9px] font-bold tracking-wide text-cash">
+                <span className="text-xs font-bold tracking-wide text-cash">
                   CASH · EXCLUSIVO
                 </span>
                 <span className="text-[10px] text-muted-foreground">{p.city}</span>

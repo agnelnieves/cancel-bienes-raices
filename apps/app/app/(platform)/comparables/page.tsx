@@ -253,7 +253,7 @@ function ComparablesInner() {
                 onClick={() => toggleSource(s)}
                 aria-pressed={sources.includes(s)}
                 className={cn(
-                  "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+                  "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
                   sources.includes(s)
                     ? s === "cash"
                       ? "border-cash/40 bg-cash-soft text-cash"
@@ -271,7 +271,7 @@ function ComparablesInner() {
               onClick={() => setOnlyExclusive((v) => !v)}
               aria-pressed={onlyExclusive}
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/40 max-sm:w-full max-sm:justify-center sm:ml-auto",
+                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/40 max-sm:w-full max-sm:justify-center sm:ml-auto",
                 onlyExclusive
                   ? "border-cash bg-cash text-cash-foreground"
                   : "border-cash/40 text-cash hover:bg-cash-soft/60"
@@ -327,7 +327,7 @@ function ComparablesInner() {
             </span>
           </span>
           {stats.cashCount > 0 && (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-cash/30 bg-cash-soft px-2.5 py-1 text-[11px] font-semibold text-cash">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-cash/30 bg-cash-soft px-2.5 py-1 text-xs font-semibold text-cash">
               <BadgeCheck className="size-3.5" aria-hidden />
               {stats.cashCount} cash deal{stats.cashCount > 1 ? "s" : ""}{" "}
               exclusivo{stats.cashCount > 1 ? "s" : ""} de la red
