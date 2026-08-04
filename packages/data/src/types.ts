@@ -47,6 +47,8 @@ export interface Property {
   verified: boolean
   condition: Condition
   estimatedRent: number
+  /** Precio original antes de reducción (solo algunos activos) — para badge "price cut" */
+  originalPrice?: number
   /** Tarifa noche estimada para short-term rental, si aplica */
   strNightlyRate?: number
 }
@@ -95,6 +97,8 @@ export interface Deal {
   notes: string
   contactName: string
   contactRole: string
+  /** Próxima acción concreta a tomar — convierte el tablero en guía (HubSpot) */
+  nextStep?: string
   updatedAt: string
 }
 

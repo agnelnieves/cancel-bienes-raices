@@ -20,7 +20,8 @@
   --accent-foreground: #0c3f2d;
   --destructive: #dc2626;
   --destructive-foreground: #ffffff;
-  --border: #e6dfd2; /* clay hairline */
+  /* Hairline tenue — la separación la hace el shadow, no la línea (Attio quiet-luxury) */
+  --border: #eae4d6;
   --input: #e6dfd2;
   --ring: #1d9e75;
   /* Acentos semánticos (estados y momentos de marca) */

@@ -176,10 +176,17 @@ export default function ComunidadPage() {
           </CardContent>
         </Card>
 
-        {/* Posts */}
-        {visible.map((post) => (
-          <Card key={post.id} className={cn("shadow-card", post.pinned && "border-primary/25")}>
-            <CardContent className="p-4 sm:p-5">
+        {/* Posts — feed por hairlines, ritmo de lectura (Threads), no cards pesadas */}
+        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+          {visible.map((post, i) => (
+            <article
+              key={post.id}
+              className={cn(
+                "p-4 transition-colors hover:bg-muted/30 sm:p-5",
+                i > 0 && "border-t border-border/70",
+                post.pinned && "bg-primary/[0.03]"
+              )}
+            >
               <div className="flex items-start gap-3">
                 <Avatar className="size-9 shrink-0">
                   <AvatarFallback
@@ -292,22 +299,20 @@ export default function ComunidadPage() {
                   )}
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        ))}
+            </article>
+          ))}
 
-        {visible.length === 0 && (
-          <Card className="border-dashed">
-            <CardContent className="flex flex-col items-center gap-2 py-14 text-center">
+          {visible.length === 0 && (
+            <div className="flex flex-col items-center gap-2 py-14 text-center">
               <MessageCircle className="size-8 text-muted-foreground/50" />
               <p className="font-medium">Todavía no hay posts en #{activeChannel?.name}</p>
               <p className="max-w-sm text-sm text-muted-foreground">
                 Sé el primero — una pregunta buena aquí te ahorra miles en el
                 próximo deal.
               </p>
-            </CardContent>
-          </Card>
-        )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Miembros */}

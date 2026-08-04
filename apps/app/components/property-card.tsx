@@ -6,9 +6,11 @@ import {
   Bookmark,
   Calculator,
   GitCompareArrows,
+  Home,
   Plus,
   Ruler,
   ShowerHead,
+  TrendingDown,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -25,9 +27,75 @@ import { useAnalysisStore } from "@/lib/stores/analysis"
 import { usePipelineStore } from "@/lib/stores/pipeline"
 import { useSavedStore } from "@/lib/stores/saved"
 
+/** Placeholder on-brand para la foto — gradiente cálido + icono, no finge foto real */
+function PropertyImage({ p, saved }: { p: Property; saved: boolean }) {
+  const isCash = sourceMeta[p.source].exclusive
+  const isActive = p.status === "active"
+  const drop =
+    p.originalPrice && p.originalPrice > p.price
+      ? Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100)
+      : null
+
+  return (
+    <div
+      className={cn(
+        "relative flex h-40 items-center justify-center overflow-hidden",
+        "bg-gradient-to-br from-accent via-muted to-secondary"
+      )}
+      aria-hidden
+    >
+      {/* grano/patrones sutil */}
+      <div className="absolute inset-0 opacity-[0.4] [background:radial-gradient(circle_at_30%_20%,var(--primary)/12%,transparent_55%)]" />
+      <Home className="size-10 text-primary/25" strokeWidth={1.5} />
+
+      {/* Badges overlaid — top-left: lo urgente */}
+      <div className="absolute top-2.5 left-2.5 flex flex-col items-start gap-1.5">
+        {isCash && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-cash px-2.5 py-1 text-[10px] font-bold text-cash-foreground shadow-soft">
+            Cash deal · Exclusivo
+          </span>
+        )}
+        {drop !== null && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-success px-2.5 py-1 text-[10px] font-bold text-success-foreground shadow-soft">
+            <TrendingDown className="size-3" />
+            Bajó {drop}%
+          </span>
+        )}
+        {isActive && !drop && p.daysOnMarket <= 7 && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-info px-2.5 py-1 text-[10px] font-bold text-info-foreground shadow-soft">
+            Recién listada
+          </span>
+        )}
+      </div>
+
+      {/* Guardar — top-right */}
+      <SaveButton id={p.id} saved={saved} />
+    </div>
+  )
+}
+
+function SaveButton({ id, saved }: { id: string; saved: boolean }) {
+  const toggleSaved = useSavedStore((s) => s.toggleSaved)
+  return (
+    <button
+      onClick={() => {
+        toggleSaved(id)
+        toast(saved ? "Quitada de guardadas" : "Guardada en favoritos")
+      }}
+      aria-pressed={saved}
+      aria-label={saved ? "Quitar de guardadas" : "Guardar en favoritos"}
+      className="absolute top-2.5 right-2.5 flex size-8 items-center justify-center rounded-full bg-card/90 text-foreground shadow-soft backdrop-blur-sm transition-all hover:scale-105 hover:bg-card"
+    >
+      <Bookmark
+        className={cn("size-4", saved && "fill-primary text-primary")}
+      />
+    </button>
+  )
+}
+
 export function PropertyCard({ property: p }: { property: Property }) {
   const router = useRouter()
-  const { savedIds, compareIds, toggleSaved, toggleCompare } = useSavedStore()
+  const { savedIds, compareIds, toggleCompare } = useSavedStore()
   const addDeal = usePipelineStore((s) => s.addDeal)
   const setPrefill = useAnalysisStore((s) => s.setPrefill)
 
@@ -44,11 +112,44 @@ export function PropertyCard({ property: p }: { property: Property }) {
       )}
     >
       {meta.exclusive && (
-        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-cash/0 via-cash to-cash/0" />
+        <div className="absolute inset-x-0 top-0 z-10 h-1 bg-gradient-to-r from-cash/0 via-cash to-cash/0" />
       )}
+
+      {/* Imagen con badges overlaid */}
+      <PropertyImage p={p} saved={saved} />
+
       <CardContent className="p-4 sm:p-5">
+        {/* Precio primero — lo más importante (Zillow) */}
+        <div className="flex items-baseline justify-between gap-3">
+          <p className="font-heading text-2xl font-bold tracking-tight">
+            {formatCurrency(p.price)}
+          </p>
+          <p className="text-[11px] font-medium text-muted-foreground">
+            ${p.pricePerSqFt}/pc
+          </p>
+        </div>
+        {p.originalPrice && p.originalPrice > p.price && (
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            <span className="line-through">{formatCurrency(p.originalPrice)}</span>
+            <span className="ml-1.5 font-semibold text-success">
+              bajó {formatCurrency(p.originalPrice - p.price)}
+            </span>
+          </p>
+        )}
+
+        {/* Dirección */}
+        <div className="mt-2 min-w-0">
+          <h3 className="truncate text-[14px] font-semibold tracking-tight">
+            {p.address}
+          </h3>
+          <p className="truncate text-xs text-muted-foreground">
+            {p.city} {p.zipCode} · {p.type}
+            {!isActive && ` · vendida ${formatDateShort(p.date)}`}
+          </p>
+        </div>
+
         {/* Fuente + estado */}
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
           <SourceChip source={p.source} verified={p.verified} />
           {isActive && (
             <span className="inline-flex items-center gap-1 rounded-full border border-info/30 bg-info-soft px-2 py-0.5 text-[10px] font-semibold text-info">
@@ -58,39 +159,20 @@ export function PropertyCard({ property: p }: { property: Property }) {
           )}
         </div>
 
-        {/* Dirección + precio */}
-        <div className="mt-2.5 flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h3 className="truncate text-[15px] font-semibold tracking-tight">
-              {p.address}
-            </h3>
-            <p className="truncate text-xs text-muted-foreground">
-              {p.city} {p.zipCode} · {p.type}
-              {!isActive && ` · vendida ${formatDateShort(p.date)}`}
-            </p>
-          </div>
-          <div className="shrink-0 text-right">
-            <p className="font-heading text-xl font-bold tracking-tight">
-              {formatCurrency(p.price)}
-            </p>
-            <p className="text-[11px] font-medium text-muted-foreground">
-              ${p.pricePerSqFt}/pc
-            </p>
-          </div>
-        </div>
-
-        {/* Specs + renta estimada */}
-        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+        {/* Specs en una línea — ritmo de escaneo uniforme */}
+        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
           {p.bedrooms > 0 && (
             <span className="inline-flex items-center gap-1">
               <BedDouble className="size-3.5" aria-hidden />
               {p.bedrooms} hab
             </span>
           )}
+          <span aria-hidden>·</span>
           <span className="inline-flex items-center gap-1">
             <ShowerHead className="size-3.5" aria-hidden />
             {p.bathrooms} baño{p.bathrooms !== 1 ? "s" : ""}
           </span>
+          <span aria-hidden>·</span>
           <span className="inline-flex items-center gap-1">
             <Ruler className="size-3.5" aria-hidden />
             {p.sqFt.toLocaleString()} pc
@@ -110,18 +192,6 @@ export function PropertyCard({ property: p }: { property: Property }) {
 
         {/* Acciones */}
         <div className="mt-4 flex flex-wrap gap-1.5">
-          <Button
-            size="xs"
-            variant={saved ? "secondary" : "outline"}
-            aria-pressed={saved}
-            onClick={() => {
-              toggleSaved(p.id)
-              toast(saved ? "Quitada de guardadas" : "Guardada en favoritos")
-            }}
-          >
-            <Bookmark className={saved ? "fill-current" : undefined} />
-            {saved ? "Guardada" : "Guardar"}
-          </Button>
           <Button
             size="xs"
             variant={comparing ? "secondary" : "outline"}

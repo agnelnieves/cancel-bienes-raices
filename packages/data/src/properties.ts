@@ -34,6 +34,8 @@ interface PropInput {
   rent: number
   str?: number
   verified?: boolean
+  /** Precio original antes de una reducción (solo listados activos) */
+  originalPrice?: number
 }
 
 function p(i: PropInput): Property {
@@ -60,6 +62,7 @@ function p(i: PropInput): Property {
     verified: i.verified ?? true,
     condition: i.condition,
     estimatedRent: i.rent,
+    originalPrice: i.originalPrice,
     strNightlyRate: i.str,
   }
 }
@@ -74,7 +77,7 @@ export const properties: Property[] = [
   p({ id: "p-005", address: "Calle Loíza 1802", zone: "santurce", city: "Santurce, San Juan", zip: "00911", lat: 18.4451, lng: -66.0698, type: "Casa", status: "sold", price: 228000, bd: 3, ba: 2, sqft: 1150, lot: 1200, year: 1958, date: "2026-07-02", dom: 31, source: "cash", condition: "Necesita reparos", rent: 1900, str: 150 }),
   p({ id: "p-006", address: "Ave. Ponce de León 954, Apt 6A", zone: "santurce", city: "Santurce, San Juan", zip: "00907", lat: 18.4462, lng: -66.0735, type: "Apartamento", status: "sold", price: 172000, bd: 2, ba: 1, sqft: 850, year: 1972, date: "2026-06-14", dom: 44, source: "registro", condition: "Buena", rent: 1400, str: 115 }),
   p({ id: "p-007", address: "Calle Cerra 620", zone: "santurce", city: "Santurce, San Juan", zip: "00907", lat: 18.4428, lng: -66.0672, type: "Multifamiliar", status: "sold", price: 310000, bd: 5, ba: 3, sqft: 2100, lot: 2400, year: 1963, date: "2026-07-11", dom: 38, source: "cash", condition: "Para remodelar", rent: 3200 }),
-  p({ id: "p-008", address: "Calle Hoare 1510", zone: "santurce", city: "Santurce, San Juan", zip: "00911", lat: 18.4441, lng: -66.0661, type: "Casa", status: "active", price: 189000, bd: 3, ba: 1, sqft: 1050, lot: 1500, year: 1955, date: "2026-07-24", dom: 5, source: "mls", condition: "Para remodelar", rent: 1500 }),
+  p({ id: "p-008", address: "Calle Hoare 1510", zone: "santurce", city: "Santurce, San Juan", zip: "00911", lat: 18.4441, lng: -66.0661, type: "Casa", status: "active", price: 189000, originalPrice: 205000, bd: 3, ba: 1, sqft: 1050, lot: 1500, year: 1955, date: "2026-07-24", dom: 5, source: "mls", condition: "Para remodelar", rent: 1500 }),
   p({ id: "p-009", address: "Ave. Fernández Juncos 1430, Apt 202", zone: "santurce", city: "Santurce, San Juan", zip: "00909", lat: 18.4471, lng: -66.0752, type: "Apartamento", status: "sold", price: 145000, bd: 1, ba: 1, sqft: 620, year: 1985, date: "2026-05-30", dom: 29, source: "mls", condition: "Buena", rent: 1150, str: 95 }),
   // ------------------------------------------------------- VIEJO SAN JUAN
   p({ id: "p-010", address: "Calle Luna 255, Apt 2N", zone: "viejo-san-juan", city: "Viejo San Juan", zip: "00901", lat: 18.4662, lng: -66.1162, type: "Apartamento", status: "sold", price: 265000, bd: 2, ba: 1, sqft: 920, year: 1920, date: "2026-06-28", dom: 36, source: "cash", condition: "Buena", rent: 1950, str: 175 }),
@@ -111,7 +114,7 @@ export const properties: Property[] = [
   // ---------------------------------------------------------------- PONCE
   p({ id: "p-035", address: "Calle Comercio 78", zone: "ponce", city: "Ponce", zip: "00717", lat: 18.0118, lng: -66.6128, type: "Casa", status: "sold", price: 98000, bd: 3, ba: 1, sqft: 1000, lot: 2800, year: 1965, date: "2026-07-04", dom: 72, source: "cash", condition: "Necesita reparos", rent: 950 }),
   p({ id: "p-036", address: "Urb. La Alhambra, Calle 14 #22", zone: "ponce", city: "Ponce", zip: "00716", lat: 18.0095, lng: -66.6162, type: "Casa", status: "sold", price: 145000, bd: 4, ba: 2, sqft: 1550, lot: 3400, year: 1983, date: "2026-06-15", dom: 58, source: "mls", condition: "Buena", rent: 1250 }),
-  p({ id: "p-037", address: "Calle Marina 89, Playa de Ponce", zone: "ponce", city: "Ponce", zip: "00734", lat: 18.0132, lng: -66.6095, type: "Casa", status: "active", price: 87000, bd: 3, ba: 1, sqft: 950, lot: 2200, year: 1958, date: "2026-07-20", dom: 9, source: "crim", condition: "Para remodelar", rent: 850 }),
+  p({ id: "p-037", address: "Calle Marina 89, Playa de Ponce", zone: "ponce", city: "Ponce", zip: "00734", lat: 18.0132, lng: -66.6095, type: "Casa", status: "active", price: 87000, originalPrice: 98000, bd: 3, ba: 1, sqft: 950, lot: 2200, year: 1958, date: "2026-07-20", dom: 9, source: "crim", condition: "Para remodelar", rent: 850 }),
   p({ id: "p-038", address: "Urb. El Tuque, Calle 5 #31", zone: "ponce", city: "Ponce", zip: "00728", lat: 18.0105, lng: -66.6181, type: "Multifamiliar", status: "sold", price: 118000, bd: 4, ba: 2, sqft: 1500, lot: 2600, year: 1970, date: "2026-05-28", dom: 66, source: "cash", condition: "Buena", rent: 1500 }),
   // ------------------------------------------------------------ PALMAS DEL MAR
   p({ id: "p-039", address: "Palmas del Mar, Villa Tranquila 42", zone: "palmas", city: "Humacao", zip: "00791", lat: 18.0892, lng: -65.7985, type: "Townhouse", status: "sold", price: 328000, bd: 3, ba: 2.5, sqft: 1700, lot: 2100, year: 1998, date: "2026-07-13", dom: 32, source: "mls", condition: "Excelente", rent: 2400, str: 190 }),

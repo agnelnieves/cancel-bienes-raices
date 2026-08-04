@@ -6,6 +6,7 @@ import {
   BadgeCheck,
   Building,
   CircleDollarSign,
+  Lightbulb,
   Palmtree,
   Save,
   TrendingUp,
@@ -45,6 +46,7 @@ import {
   computeStr,
   projection10Years,
 } from "@/lib/finance"
+import { InfoTip } from "@/components/info-tip"
 import { useAnalysisStore, type CalcMode } from "@/lib/stores/analysis"
 import { usePipelineStore } from "@/lib/stores/pipeline"
 
@@ -174,6 +176,32 @@ export default function CalculadoraPage() {
 
   const verdict = getVerdict(mode, rental.cashOnCash, flip.roi)
 
+  // Sensibilidad educativa: cuánto mejora el cash flow si bajas el precio $10K
+  const sensitivity = React.useMemo(() => {
+    if (mode === "flip") return null
+    const cheaper = computeRental({
+      price: Math.max(price - 10000, 1000),
+      closingPct,
+      rehab,
+      financed,
+      downPct,
+      ratePct,
+      years,
+      monthlyRent: rent,
+      taxesAnnual,
+      insuranceAnnual,
+      hoaMonthly,
+      maintenancePct,
+      vacancyPct,
+      mgmtPct,
+    })
+    return Math.round(cheaper.cashFlowMonthly - rental.cashFlowMonthly)
+  }, [
+    mode, price, closingPct, rehab, financed, downPct, ratePct, years, rent,
+    taxesAnnual, insuranceAnnual, hoaMonthly, maintenancePct, vacancyPct, mgmtPct,
+    rental.cashFlowMonthly,
+  ])
+
   return (
     <div className="space-y-5 animate-fade-in">
       {/* Banner de prefill */}
@@ -283,7 +311,10 @@ export default function CalculadoraPage() {
           {mode === "flip" && (
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm">Venta (ARV)</CardTitle>
+                <CardTitle className="flex items-center gap-1.5 text-sm">
+                  Venta (ARV)
+                  <InfoTip text="After Repair Value — cuánto valdrá la propiedad después de remodelarla." />
+                </CardTitle>
               </CardHeader>
               <CardContent className="grid grid-cols-2 gap-3">
                 <NumberField label="Valor después de remodelar" value={arv} onChange={setArv} prefix="$" step={5000} className="col-span-2" />
@@ -300,7 +331,7 @@ export default function CalculadoraPage() {
                 <CardTitle className="text-sm">Short-term rental</CardTitle>
               </CardHeader>
               <CardContent className="grid grid-cols-2 gap-3">
-                <NumberField label="Tarifa por noche (ADR)" value={adr} onChange={setAdr} prefix="$" step={10} />
+                <NumberField label="Tarifa por noche (ADR)" tip="Average Daily Rate — el precio promedio que cobras por noche en Airbnb." value={adr} onChange={setAdr} prefix="$" step={10} />
                 <NumberField label="Ocupación" value={occupancyPct} onChange={setOccupancyPct} suffix="%" step={5} />
                 <NumberField label="Management" value={mgmtStrPct} onChange={setMgmtStrPct} suffix="%" step={5} />
                 <NumberField label="Utilidades (mes)" value={utilitiesMonthly} onChange={setUtilitiesMonthly} prefix="$" step={20} />
@@ -372,6 +403,20 @@ export default function CalculadoraPage() {
                 </div>
               </div>
 
+              {/* Callout educativo — enseña la sensibilidad del deal (Zillow) */}
+              {sensitivity !== null && sensitivity > 0 && (
+                <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-info/25 bg-info-soft/70 px-3.5 py-2.5">
+                  <Lightbulb className="mt-0.5 size-4 shrink-0 text-info" aria-hidden />
+                  <p className="text-[12.5px] leading-snug text-foreground/85">
+                    Si bajas el precio <strong>$10,000</strong>, tu cash flow sube{" "}
+                    <strong className="text-info">
+                      ~{formatCurrency(sensitivity)}/mes
+                    </strong>
+                    . Negociar el precio es la palanca más poderosa que tienes.
+                  </p>
+                </div>
+              )}
+
               {/* Detalle para el que quiere los números */}
               <details className="group mt-4 border-t border-border pt-3">
                 <summary className="flex cursor-pointer list-none items-center gap-1.5 text-[12px] font-medium text-muted-foreground outline-none transition-colors select-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40 [&::-webkit-details-marker]:hidden">
@@ -388,11 +433,12 @@ export default function CalculadoraPage() {
                     </>
                   ) : (
                     <>
-                      <BigMetric label="Cap rate" value={`${rental.capRate.toFixed(1)}%`} />
-                      <BigMetric label="Cash-on-cash" value={`${rental.cashOnCash.toFixed(1)}%`} />
-                      <BigMetric label="Cash necesario" value={formatCurrency(rental.cashNeeded)} />
+                      <BigMetric label="Cap rate" tip="Cuánto rinde la propiedad al año si la pagaras toda en cash, como % de su valor." value={`${rental.capRate.toFixed(1)}%`} />
+                      <BigMetric label="Cash-on-cash" tip="El retorno anual sobre el cash que tú sacaste de tu bolsillo (no sobre el precio total)." value={`${rental.cashOnCash.toFixed(1)}%`} />
+                      <BigMetric label="Cash necesario" tip="Todo el dinero que necesitas para cerrar: pronto, costos y reparos." value={formatCurrency(rental.cashNeeded)} />
                       <BigMetric
                         label="Break-even"
+                        tip="Cuánto tarda el cash flow acumulado en devolverte lo que invertiste."
                         value={
                           rental.breakEvenMonths
                             ? `${Math.floor(rental.breakEvenMonths / 12)}a ${rental.breakEvenMonths % 12}m`
@@ -439,6 +485,7 @@ export default function CalculadoraPage() {
                     {rental.dscr && (
                       <Row
                         label="DSCR (cobertura de deuda)"
+                        tip="Cuántas veces la renta cubre el pago de la hipoteca. Sobre 1.25 al banco le gusta."
                         value={rental.dscr.toFixed(2)}
                         muted
                       />
@@ -543,6 +590,7 @@ function NumberField({
   suffix,
   step = 1,
   className,
+  tip,
 }: {
   label: string
   value: number
@@ -551,15 +599,17 @@ function NumberField({
   suffix?: string
   step?: number
   className?: string
+  tip?: string
 }) {
   const id = React.useId()
   return (
     <div className={cn("space-y-1.5", className)}>
       <Label
         htmlFor={id}
-        className="text-xs font-medium text-muted-foreground"
+        className="flex items-center gap-1 text-xs font-medium text-muted-foreground"
       >
         {label}
+        {tip && <InfoTip text={tip} />}
       </Label>
       <div className="relative">
         {prefix && (
@@ -585,11 +635,20 @@ function NumberField({
   )
 }
 
-function BigMetric({ label, value }: { label: string; value: string }) {
+function BigMetric({
+  label,
+  value,
+  tip,
+}: {
+  label: string
+  value: string
+  tip?: string
+}) {
   return (
     <div>
-      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+      <p className="flex items-center gap-1 text-xs font-medium text-muted-foreground uppercase tracking-wide">
         {label}
+        {tip && <InfoTip text={tip} />}
       </p>
       <p className="font-heading text-lg font-bold tracking-tight">{value}</p>
     </div>
@@ -601,21 +660,24 @@ function Row({
   value,
   muted,
   strong,
+  tip,
 }: {
   label: string
   value: string
   muted?: boolean
   strong?: boolean
+  tip?: string
 }) {
   return (
     <div className="flex items-center justify-between gap-3">
       <span
         className={cn(
-          "min-w-0",
+          "flex min-w-0 items-center gap-1",
           muted ? "text-muted-foreground" : strong ? "font-semibold" : ""
         )}
       >
         {label}
+        {tip && <InfoTip text={tip} />}
       </span>
       <span
         className={cn(

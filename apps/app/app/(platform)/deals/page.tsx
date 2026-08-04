@@ -13,6 +13,8 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core"
 import {
+  AlertTriangle,
+  ArrowRight,
   CalendarDays,
   CircleDollarSign,
   GripVertical,
@@ -66,6 +68,13 @@ function roiTier(roi: number): {
   if (roi >= 14) return { variant: "success", verdict: "fuerte" }
   if (roi >= 8) return { variant: "warning", verdict: "moderado" }
   return { variant: "destructive", verdict: "bajo" }
+}
+
+/** Días desde el último toque al deal — para el indicador de salud */
+function daysSince(isoDate: string): number {
+  const then = new Date(isoDate + "T00:00:00").getTime()
+  const now = new Date().setHours(0, 0, 0, 0)
+  return Math.max(0, Math.round((now - then) / 86400000))
 }
 
 const EMPTY_HINT: Record<DealStage, string> = {
@@ -228,6 +237,18 @@ export default function DealsPage() {
                 </div>
 
                 <div className="space-y-1.5">
+                  <Label className="text-xs">Próximo paso</Label>
+                  <Input
+                    value={detail.nextStep ?? ""}
+                    onChange={(e) => updateDeal(detail.id, { nextStep: e.target.value })}
+                    placeholder="Ej.: llamar al realtor, correr calculadora…"
+                  />
+                  <p className="text-[10px] text-muted-foreground">
+                    Aparece en la tarjeta del tablero — tu guía de qué hacer después.
+                  </p>
+                </div>
+
+                <div className="space-y-1.5">
                   <Label className="text-xs">Notas</Label>
                   <Textarea
                     value={detail.notes}
@@ -278,6 +299,9 @@ function StageColumn({
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage })
   const total = deals.reduce((a, d) => a + d.askingPrice, 0)
+  const staleCount = deals.filter(
+    (d) => daysSince(d.updatedAt) >= 7 && d.stage !== "cierre"
+  ).length
 
   return (
     <div
@@ -304,6 +328,21 @@ function StageColumn({
         ))}
         {deals.length === 0 && <EmptyColumnHint stage={stage} />}
       </div>
+
+      {/* Footer agregado — valor de la etapa de un vistazo (HubSpot) */}
+      {deals.length > 0 && (
+        <div className="mt-2 flex items-center justify-between border-t border-border/70 px-2 pt-2 pb-0.5">
+          <span className="text-[10px] font-semibold text-foreground/80">
+            Total {formatCompact(total)}
+          </span>
+          {staleCount > 0 && (
+            <span className="inline-flex items-center gap-1 text-[9px] font-medium text-warning">
+              <AlertTriangle className="size-2.5" aria-hidden />
+              {staleCount} estancado{staleCount > 1 ? "s" : ""}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -385,6 +424,10 @@ function DealCard({
   overlay?: boolean
 }) {
   const tier = roiTier(deal.roi)
+  const staleDays = daysSince(deal.updatedAt)
+  // Estancado: sin tocar 7+ días y aún no cierra (HubSpot "no activity")
+  const isStale = staleDays >= 7 && deal.stage !== "cierre"
+
   return (
     <Card
       className={cn(
@@ -410,15 +453,35 @@ function DealCard({
             {deal.roi > 0 ? `${deal.roi}% ROI · ${tier.verdict}` : "ROI sin estimar"}
           </Badge>
         </div>
-        <div className="mt-1.5 flex items-center gap-2.5 text-[10px] text-muted-foreground">
-          <span className="inline-flex items-center gap-1">
-            <CircleDollarSign className="size-3" />
-            {formatCurrency(deal.cashFlow)}/mes
+
+        {/* Próximo paso — convierte el tablero en guía */}
+        {deal.nextStep && (
+          <p className="mt-2 flex items-start gap-1.5 text-[11px] leading-snug text-foreground/75">
+            <ArrowRight className="mt-0.5 size-3 shrink-0 text-primary" aria-hidden />
+            <span className="min-w-0">{deal.nextStep}</span>
+          </p>
+        )}
+
+        <div className="mt-1.5 flex items-center justify-between gap-2">
+          <span className="inline-flex items-center gap-2.5 text-[10px] text-muted-foreground">
+            <span className="inline-flex items-center gap-1">
+              <CircleDollarSign className="size-3" />
+              {formatCurrency(deal.cashFlow)}/mes
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <CalendarDays className="size-3" />
+              {deal.updatedAt.slice(5)}
+            </span>
           </span>
-          <span className="inline-flex items-center gap-1">
-            <CalendarDays className="size-3" />
-            {deal.updatedAt.slice(5)}
-          </span>
+          {isStale && (
+            <span
+              className="inline-flex items-center gap-1 rounded-full bg-warning-soft px-1.5 py-0.5 text-[9px] font-semibold text-warning"
+              title={`Sin actividad hace ${staleDays} días`}
+            >
+              <AlertTriangle className="size-2.5" aria-hidden />
+              {staleDays}d sin tocar
+            </span>
+          )}
         </div>
       </CardContent>
     </Card>

@@ -30,6 +30,7 @@ export const mockDeals: Deal[] = [
       "Vendedor motivado. Propiedad necesita pintura y reparaciones menores. Comparables de la zona apoyan oferta baja.",
     contactName: "María Torres",
     contactRole: "Realtor",
+    nextStep: "Contraofertar a $172K con los comparables de la zona",
     updatedAt: "2026-07-27",
   },
   {
@@ -44,6 +45,7 @@ export const mockDeals: Deal[] = [
     notes: "Buena zona. Revisar comparables recientes dentro de la urbanización antes de ofertar.",
     contactName: "Carlos Rivera",
     contactRole: "Propietario",
+    nextStep: "Correr los números en la calculadora antes de ofertar",
     updatedAt: "2026-07-25",
   },
   {
@@ -58,6 +60,7 @@ export const mockDeals: Deal[] = [
     notes: "Multifamiliar con 2 unidades alquiladas. Cash deal reportado por la red — verificar título.",
     contactName: "Pedro Méndez",
     contactRole: "Realtor",
+    nextStep: "Verificar título en el Registro de la Propiedad",
     updatedAt: "2026-07-26",
   },
   {
@@ -72,6 +75,7 @@ export const mockDeals: Deal[] = [
     notes: "Inspección programada para el 2 de agosto. Financiamiento pre-aprobado con FirstBank.",
     contactName: "Ana Colón",
     contactRole: "Realtor",
+    nextStep: "Inspección el 2 de agosto — confirmar con el inspector",
     updatedAt: "2026-07-28",
   },
   {
@@ -86,6 +90,7 @@ export const mockDeals: Deal[] = [
     notes: "Subasta del banco. Necesita rehabilitación completa — estimado de remodelación en $38K.",
     contactName: "Luis Ortiz",
     contactRole: "Agente de banco",
+    nextStep: "Someter oferta $72K con prueba de fondos",
     updatedAt: "2026-07-27",
   },
   {
@@ -100,6 +105,7 @@ export const mockDeals: Deal[] = [
     notes: "Cierre programado para el 5 de agosto. Documentos en el notario. Coordinar walkthrough final.",
     contactName: "Sofía Hernández",
     contactRole: "Realtor",
+    nextStep: "Coordinar walkthrough final antes del cierre",
     updatedAt: "2026-07-28",
   },
   {
@@ -114,6 +120,7 @@ export const mockDeals: Deal[] = [
     notes: "Zona premium. Evaluar si el ROI justifica — correr números con la calculadora.",
     contactName: "Roberto Vega",
     contactRole: "Propietario",
+    nextStep: "Decidir si el ROI justifica — correr calculadora",
     updatedAt: "2026-07-24",
   },
   {
@@ -128,6 +135,7 @@ export const mockDeals: Deal[] = [
     notes: "STR potencial — ADR de la zona $230 con 74% ocupación. Verificar permisos de corta estancia.",
     contactName: "José Fuentes",
     contactRole: "Realtor",
+    nextStep: "Verificar permisos de corta estancia en el municipio",
     updatedAt: "2026-07-28",
   },
 ]

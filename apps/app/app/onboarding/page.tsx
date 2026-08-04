@@ -190,7 +190,7 @@ export default function OnboardingPage() {
         </button>
       </div>
       <div
-        className="h-0.5 bg-muted"
+        className="h-1 bg-muted"
         role="progressbar"
         aria-valuenow={progress}
         aria-valuemin={0}
@@ -202,6 +202,12 @@ export default function OnboardingPage() {
           style={{ width: `${progress}%` }}
         />
       </div>
+      {/* Contador de paso — refuerza dónde estás */}
+      {!done && (
+        <p className="px-5 pt-2 text-right text-[10px] font-medium text-muted-foreground">
+          Paso {stepIndex + 1} de {STEPS.length}
+        </p>
+      )}
 
       {/* Conversación */}
       <div className="mx-auto flex w-full max-w-xl flex-1 flex-col px-5 py-8">
@@ -252,7 +258,7 @@ export default function OnboardingPage() {
                   )}
 
                   {step.type === "single" && (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-col gap-2">
                       {step.options!.map((opt, i) => (
                         <OptionChip
                           key={opt.id}
@@ -267,7 +273,7 @@ export default function OnboardingPage() {
 
                   {step.type === "multi" && (
                     <>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="grid gap-2 sm:grid-cols-2">
                         {step.options!.map((opt, i) => {
                           const selected =
                             Array.isArray(currentValue) && currentValue.includes(opt.id)
@@ -396,20 +402,31 @@ function OptionChip({
       aria-pressed={selected}
       style={{ animationDelay: `${Math.min(index, 8) * 45}ms` }}
       className={cn(
-        "group flex animate-fade-up items-center gap-2 rounded-full border px-4 py-2.5 text-left text-[13px] font-medium transition-all",
+        "group flex animate-fade-up items-center gap-3 rounded-2xl border px-4 py-3.5 text-left transition-all outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
         selected
           ? "border-primary bg-primary text-primary-foreground shadow-soft"
-          : "border-border bg-card text-foreground hover:border-primary/50 hover:bg-accent"
+          : "border-border bg-card text-foreground shadow-card hover:border-primary/50 hover:bg-accent"
       )}
     >
-      {selected && <Check className="size-3.5" />}
-      <span>
-        {label}
+      {/* Check indicator */}
+      <span
+        className={cn(
+          "flex size-5 shrink-0 items-center justify-center rounded-full border transition-colors",
+          selected
+            ? "border-primary-foreground/60 bg-primary-foreground/20"
+            : "border-border bg-muted group-hover:border-primary/40"
+        )}
+        aria-hidden
+      >
+        {selected && <Check className="size-3" />}
+      </span>
+      <span className="min-w-0">
+        <span className="block text-[14px] font-semibold">{label}</span>
         {hint && (
           <span
             className={cn(
-              "block text-[11px] font-normal",
-              selected ? "text-primary-foreground/70" : "text-muted-foreground"
+              "mt-0.5 block text-[11.5px] font-normal leading-snug",
+              selected ? "text-primary-foreground/75" : "text-muted-foreground"
             )}
           >
             {hint}

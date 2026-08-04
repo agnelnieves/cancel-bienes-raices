@@ -92,6 +92,7 @@ export default function DashboardPage() {
       icon: BadgeDollarSign,
       href: "/comparables",
       cash: true,
+      delta: `+${marketStats.cashDealsThisMonth} este mes`,
     },
     {
       label: "Comparables nuevos",
@@ -99,11 +100,12 @@ export default function DashboardPage() {
       helper: "Propiedades añadidas esta semana a tu mercado",
       icon: TrendingUp,
       href: "/comparables",
+      delta: "esta semana",
     },
   ]
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-10 animate-fade-in">
       {/* Saludo + acción principal */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
@@ -158,6 +160,19 @@ export default function DashboardPage() {
                 <p className="mt-2 font-heading text-2xl font-bold tracking-tight sm:text-3xl">
                   {kpi.value}
                 </p>
+                {"delta" in kpi && kpi.delta && (
+                  <span
+                    className={cn(
+                      "mt-1.5 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold",
+                      kpi.cash
+                        ? "bg-cash-soft text-cash"
+                        : "bg-success-soft text-success"
+                    )}
+                  >
+                    <TrendingUp className="size-2.5" aria-hidden />
+                    {kpi.delta}
+                  </span>
+                )}
                 <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
                   {kpi.helper}
                 </p>
