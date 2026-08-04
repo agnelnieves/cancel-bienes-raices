@@ -205,12 +205,13 @@ export function Assistant() {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent
           side="right"
-          className="flex w-full flex-col gap-0 p-0 sm:max-w-md"
+          showCloseButton={false}
+          className="flex flex-col gap-0 p-0 sm:max-w-md"
         >
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-border px-5 py-4">
+          <div className="flex shrink-0 items-center justify-between border-b border-border/70 px-5 py-4">
             <div className="flex items-center gap-2.5">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <div className="flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground">
                 <Sparkles className="size-4" />
               </div>
               <div>
@@ -222,12 +223,13 @@ export function Assistant() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5">
               <Button
                 variant="ghost"
                 size="icon-sm"
                 onClick={clear}
                 aria-label="Limpiar conversación"
+                className="text-muted-foreground hover:text-foreground"
               >
                 <Eraser className="size-4" />
               </Button>
@@ -236,6 +238,7 @@ export function Assistant() {
                 size="icon-sm"
                 onClick={() => setOpen(false)}
                 aria-label="Cerrar"
+                className="text-muted-foreground hover:text-foreground"
               >
                 <X className="size-4" />
               </Button>

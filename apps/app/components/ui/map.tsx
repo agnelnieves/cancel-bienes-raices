@@ -21,9 +21,11 @@ import { X, Minus, Plus, Locate, Maximize, Loader2 } from "lucide-react";
 
 import { cn } from "@cancel/ui";
 
+// Voyager: warmer land + soft greens — sits with our cream shell better than
+// Positron’s cool blue-gray (which felt detached from the product UI).
 const defaultStyles = {
   dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
-  light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+  light: "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json",
 };
 
 // A tile-less, dependency-free style with a transparent background. Use it for

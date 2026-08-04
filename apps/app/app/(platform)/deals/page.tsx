@@ -50,6 +50,7 @@ import {
   SelectTrigger,
   SelectValue,
   Sheet,
+  SheetBody,
   SheetContent,
   SheetHeader,
   SheetTitle,
@@ -169,17 +170,17 @@ export default function DealsPage() {
 
       {/* Sheet de detalle */}
       <Sheet open={!!detail} onOpenChange={(v) => !v && setDetailId(null)}>
-        <SheetContent className="w-full overflow-y-auto sm:max-w-md">
+        <SheetContent className="sm:max-w-md">
           {detail && (
             <>
-              <SheetHeader className="pb-4">
-                <SheetTitle className="text-base leading-snug">
+              <SheetHeader>
+                <SheetTitle className="leading-snug pr-2">
                   {detail.address}
                 </SheetTitle>
                 <p className="text-xs text-muted-foreground">{detail.city}</p>
               </SheetHeader>
 
-              <div className="space-y-5">
+              <SheetBody className="space-y-5">
                 <div className="grid grid-cols-2 gap-3">
                   <MiniStat label="Precio pedido" value={formatCurrency(detail.askingPrice)} />
                   <MiniStat
@@ -275,7 +276,7 @@ export default function DealsPage() {
                     Eliminar
                   </Button>
                 </div>
-              </div>
+              </SheetBody>
             </>
           )}
         </SheetContent>

@@ -98,22 +98,21 @@ const sections: { label: string; items: NavItem[] }[] = [
   },
 ]
 
-function NavLink({
-  item,
-  active,
-  badge,
-  collapsed,
-}: {
-  item: NavItem
-  active: boolean
-  badge: number | null
-  collapsed: boolean
-}) {
+const NavLink = React.forwardRef<
+  HTMLAnchorElement,
+  {
+    item: NavItem
+    active: boolean
+    badge: number | null
+    collapsed: boolean
+  }
+>(function NavLink({ item, active, badge, collapsed }, ref) {
   const iconRef = React.useRef<IconHandle>(null)
   const Icon = item.icon
 
   return (
     <Link
+      ref={ref}
       href={item.href}
       aria-label={item.label}
       aria-current={active ? "page" : undefined}
@@ -160,7 +159,7 @@ function NavLink({
       )}
     </Link>
   )
-}
+})
 
 /**
  * Desktop sidebar — inset variant (shadcn sidebar-08).
