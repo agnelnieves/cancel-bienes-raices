@@ -22,6 +22,7 @@ import {
   Plus,
   Sparkles,
   Trash2,
+  TrendingUp,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -58,7 +59,19 @@ import {
   cn,
 } from "@cancel/ui"
 
+import { PipelineAreaChart } from "@/components/charts"
 import { usePipelineStore } from "@/lib/stores/pipeline"
+
+/** Demo series for the pipeline area chart — ends at current value */
+function buildPipelineSeries(currentValue: number) {
+  const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun"]
+  // Walk back ~6 months with gentle growth into today's pipeline
+  const factors = [0.52, 0.58, 0.64, 0.72, 0.85, 1]
+  return months.map((label, i) => ({
+    label,
+    value: Math.round(currentValue * factors[i]),
+  }))
+}
 
 /** Tier de ROI con variante de Badge + lectura en español llano */
 function roiTier(roi: number): {
@@ -122,28 +135,85 @@ export default function DealsPage() {
   }
 
   const detail = deals.find((d) => d.id === detailId)
+  const totalCashFlow = Math.round(
+    deals.reduce((a, d) => a + d.cashFlow, 0)
+  )
+  const chartData = React.useMemo(
+    () => buildPipelineSeries(pipelineValue || 1_200_000),
+    [pipelineValue]
+  )
+  const prevValue = chartData[chartData.length - 2]?.value ?? pipelineValue
+  const deltaPct =
+    prevValue > 0
+      ? Math.round(((pipelineValue - prevValue) / prevValue) * 100)
+      : 0
 
   return (
-    <div className="space-y-5 animate-fade-in">
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
-        <StatCard label="Valor del pipeline" value={formatCompact(pipelineValue)} sub={`${activeDeals.length} deals activos`} />
-        <StatCard
-          label="ROI promedio"
-          value={`${avgRoi.toFixed(1)}%`}
-          sub={avgRoi >= 8 ? "vs. 8% típico en PR — vas bien" : "el típico en PR es ~8%"}
-          tone={avgRoi >= 8 ? "good" : "neutral"}
-        />
-        <StatCard
-          label="Cash flow potencial"
-          value={`${formatCurrency(Math.round(deals.reduce((a, d) => a + d.cashFlow, 0)))}`}
-          sub="mensual combinado"
-        />
-      </div>
+    <div className="space-y-6 animate-fade-in">
+      {/* Overview — compact metrics + shadcn-style area chart */}
+      <Card className="overflow-hidden">
+        <CardContent className="p-0">
+          <div className="grid divide-y divide-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+            <Metric
+              label="Valor del pipeline"
+              value={formatCompact(pipelineValue)}
+              hint={`${activeDeals.length} deals activos`}
+            />
+            <Metric
+              label="ROI promedio"
+              value={`${avgRoi.toFixed(1)}%`}
+              hint={
+                avgRoi >= 8
+                  ? "vs. 8% típico en PR"
+                  : "el típico en PR es ~8%"
+              }
+              accent={avgRoi >= 8}
+            />
+            <Metric
+              label="Cash flow potencial"
+              value={formatCurrency(totalCashFlow)}
+              hint="mensual combinado"
+            />
+          </div>
+
+          <div className="border-t border-border px-4 pt-3 pb-2 sm:px-5">
+            <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-[12px] font-medium text-foreground">
+                  Evolución del pipeline
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  Valor agregado · últimos 6 meses
+                </p>
+              </div>
+              {deltaPct !== 0 && (
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium",
+                    deltaPct > 0
+                      ? "bg-accent text-accent-foreground"
+                      : "bg-muted text-muted-foreground"
+                  )}
+                >
+                  {deltaPct > 0 && <TrendingUp className="size-3" />}
+                  {deltaPct > 0 ? "+" : ""}
+                  {deltaPct}% este mes
+                </span>
+              )}
+            </div>
+            <div className="h-[160px] w-full sm:h-[180px]">
+              <PipelineAreaChart
+                data={chartData}
+                valueFormatter={(v) => formatCompact(v)}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground">
-          Tu próximo paso: arrastra cada tarjeta a la etapa donde va el deal
+        <p className="text-[13px] text-muted-foreground">
+          Arrastra cada tarjeta a la etapa del deal
         </p>
         <Button size="sm" onClick={() => setAddOpen(true)}>
           <Plus className="size-3.5" />
@@ -153,7 +223,7 @@ export default function DealsPage() {
 
       {/* Kanban */}
       <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
-        <div className="flex gap-3 overflow-x-auto pb-4">
+        <div className="flex gap-2.5 overflow-x-auto pb-4">
           {dealStages.map((stage) => (
             <StageColumn
               key={stage.id}
@@ -308,33 +378,34 @@ function StageColumn({
     <div
       ref={setNodeRef}
       className={cn(
-        "flex w-64 shrink-0 flex-col rounded-2xl border p-2 transition-colors",
-        isOver ? "border-primary/50 bg-primary/5" : "border-border bg-muted/40"
+        "flex w-[248px] shrink-0 flex-col rounded-xl bg-muted/35 p-1.5 transition-colors",
+        isOver && "bg-muted/70 ring-1 ring-foreground/10"
       )}
     >
-      <div className="flex items-center justify-between px-2 py-2">
-        <div className="flex items-center gap-2">
-          <span className="text-[12px] font-semibold">{stageLabel(stage)}</span>
-          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-muted px-1.5 text-[10px] font-semibold text-muted-foreground">
+      <div className="flex items-center justify-between px-2 py-1.5">
+        <div className="flex items-center gap-1.5">
+          <span className="text-[12px] font-semibold tracking-tight">
+            {stageLabel(stage)}
+          </span>
+          <span className="flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-background px-1 text-[10px] font-medium text-muted-foreground tabular-nums">
             {deals.length}
           </span>
         </div>
-        <span className="text-[10px] font-medium text-muted-foreground">
+        <span className="text-[10px] tabular-nums text-muted-foreground">
           {formatCompact(total)}
         </span>
       </div>
-      <div className="flex min-h-24 flex-1 flex-col gap-2">
+      <div className="flex min-h-20 flex-1 flex-col gap-1.5">
         {deals.map((deal) => (
           <DraggableDealCard key={deal.id} deal={deal} onOpen={onOpen} />
         ))}
         {deals.length === 0 && <EmptyColumnHint stage={stage} />}
       </div>
 
-      {/* Footer agregado — valor de la etapa de un vistazo (HubSpot) */}
       {deals.length > 0 && (
-        <div className="mt-2 flex items-center justify-between border-t border-border/70 px-2 pt-2 pb-0.5">
-          <span className="text-[10px] font-semibold text-foreground/80">
-            Total {formatCompact(total)}
+        <div className="mt-1.5 flex items-center justify-between px-2 pt-1.5 pb-0.5">
+          <span className="text-[10px] font-medium text-muted-foreground">
+            {formatCompact(total)}
           </span>
           {staleCount > 0 && (
             <span className="inline-flex items-center gap-1 text-[9px] font-medium text-warning">
@@ -351,24 +422,24 @@ function StageColumn({
 /** Estado vacío que enseña: tarjeta de muestra + pista de qué va aquí */
 function EmptyColumnHint({ stage }: { stage: DealStage }) {
   return (
-    <div className="flex flex-1 flex-col gap-2">
+    <div className="flex flex-1 flex-col gap-1.5">
       {stage === "prospecto" && (
         <div
           aria-hidden="true"
-          className="rounded-xl border border-dashed border-border bg-card/60 p-3 opacity-75"
+          className="rounded-lg border border-dashed border-border bg-background/50 p-2.5 opacity-70"
         >
-          <p className="truncate text-[13px] font-medium text-muted-foreground">
+          <p className="truncate text-[12px] font-medium text-muted-foreground">
             Ej.: Casa 3h/2b, Bayamón
           </p>
-          <div className="mt-2 flex items-center justify-between">
-            <span className="font-heading text-sm font-bold text-muted-foreground">
+          <div className="mt-1.5 flex items-center justify-between">
+            <span className="font-heading text-[12px] font-semibold text-muted-foreground">
               $165K
             </span>
-            <Badge variant="success">12% ROI</Badge>
+            <span className="text-[10px] text-muted-foreground">12% ROI</span>
           </div>
         </div>
       )}
-      <p className="px-2 py-3 text-center text-[11px] leading-relaxed text-muted-foreground/80">
+      <p className="px-1.5 py-2 text-center text-[10.5px] leading-relaxed text-muted-foreground/80">
         {EMPTY_HINT[stage] ?? "Arrastra una tarjeta aquí."}
       </p>
     </div>
@@ -430,91 +501,104 @@ function DealCard({
   const isStale = staleDays >= 7 && deal.stage !== "cierre"
 
   return (
-    <Card
+    <div
       className={cn(
-        "shadow-card transition-all",
-        overlay ? "rotate-2 shadow-lift" : "hover:shadow-soft"
+        "rounded-lg bg-background p-2.5 shadow-card transition-shadow",
+        overlay ? "rotate-1 shadow-lift" : "hover:shadow-soft",
+        onOpen && "cursor-pointer"
       )}
+      onClick={onOpen}
+      role={onOpen ? "button" : undefined}
     >
-      <CardContent className="p-3">
-        <div className="flex items-start gap-1.5">
-          <div className="min-w-0 flex-1" onClick={onOpen} role={onOpen ? "button" : undefined}>
-            <p className="cursor-pointer truncate text-[13px] leading-snug font-medium">
-              {deal.address}
-            </p>
-            <p className="text-[11px] text-muted-foreground">{deal.city}</p>
-          </div>
-          {dragHandle}
-        </div>
-        <div className="mt-2.5 flex items-center justify-between gap-2">
-          <span className="font-heading text-sm font-bold">
-            {formatCompact(deal.askingPrice)}
-          </span>
-          <Badge variant={tier.variant}>
-            {deal.roi > 0 ? `${deal.roi}% ROI · ${tier.verdict}` : "ROI sin estimar"}
-          </Badge>
-        </div>
-
-        {/* Próximo paso — convierte el tablero en guía */}
-        {deal.nextStep && (
-          <p className="mt-2 flex items-start gap-1.5 text-[11px] leading-snug text-foreground/75">
-            <ArrowRight className="mt-0.5 size-3 shrink-0 text-primary" aria-hidden />
-            <span className="min-w-0">{deal.nextStep}</span>
+      <div className="flex items-start gap-1">
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[12.5px] leading-snug font-medium">
+            {deal.address}
           </p>
-        )}
-
-        <div className="mt-1.5 flex items-center justify-between gap-2">
-          <span className="inline-flex items-center gap-2.5 text-[10px] text-muted-foreground">
-            <span className="inline-flex items-center gap-1">
-              <CircleDollarSign className="size-3" />
-              {formatCurrency(deal.cashFlow)}/mes
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <CalendarDays className="size-3" />
-              {deal.updatedAt.slice(5)}
-            </span>
-          </span>
-          {isStale && (
-            <span
-              className="inline-flex items-center gap-1 rounded-full bg-warning-soft px-1.5 py-0.5 text-[9px] font-semibold text-warning"
-              title={`Sin actividad hace ${staleDays} días`}
-            >
-              <AlertTriangle className="size-2.5" aria-hidden />
-              {staleDays}d sin tocar
-            </span>
-          )}
+          <p className="text-[10.5px] text-muted-foreground">{deal.city}</p>
         </div>
-      </CardContent>
-    </Card>
+        {dragHandle && (
+          <span
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+          >
+            {dragHandle}
+          </span>
+        )}
+      </div>
+
+      <div className="mt-2 flex items-center justify-between gap-2">
+        <span className="font-heading text-[13px] font-semibold tabular-nums tracking-tight">
+          {formatCompact(deal.askingPrice)}
+        </span>
+        <Badge
+          variant={tier.variant}
+          className="h-5 px-1.5 text-[10px] font-medium"
+        >
+          {deal.roi > 0 ? `${deal.roi}% · ${tier.verdict}` : "Sin ROI"}
+        </Badge>
+      </div>
+
+      {deal.nextStep && (
+        <p className="mt-1.5 flex items-start gap-1 text-[10.5px] leading-snug text-muted-foreground">
+          <ArrowRight
+            className="mt-0.5 size-2.5 shrink-0 text-primary"
+            aria-hidden
+          />
+          <span className="min-w-0 line-clamp-2">{deal.nextStep}</span>
+        </p>
+      )}
+
+      <div className="mt-1.5 flex items-center justify-between gap-2">
+        <span className="inline-flex items-center gap-2 text-[10px] text-muted-foreground">
+          <span className="inline-flex items-center gap-0.5 tabular-nums">
+            <CircleDollarSign className="size-2.5" />
+            {formatCurrency(deal.cashFlow)}/mes
+          </span>
+          <span className="inline-flex items-center gap-0.5">
+            <CalendarDays className="size-2.5" />
+            {deal.updatedAt.slice(5)}
+          </span>
+        </span>
+        {isStale && (
+          <span
+            className="inline-flex items-center gap-0.5 rounded-full bg-warning-soft px-1.5 py-px text-[9px] font-medium text-warning"
+            title={`Sin actividad hace ${staleDays} días`}
+          >
+            <AlertTriangle className="size-2.5" aria-hidden />
+            {staleDays}d
+          </span>
+        )}
+      </div>
+    </div>
   )
 }
 
-function StatCard({
+/** Compact metric cell — Airbnb-scale, not a big KPI tile */
+function Metric({
   label,
   value,
-  sub,
-  tone,
+  hint,
+  accent,
 }: {
   label: string
   value: string
-  sub: string
-  tone?: "good" | "neutral"
+  hint: string
+  accent?: boolean
 }) {
   return (
-    <Card className="shadow-card">
-      <CardContent className="p-4">
-        <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
-        <p
-          className={cn(
-            "mt-1 font-heading text-xl font-bold tracking-tight sm:text-2xl",
-            tone === "good" && "text-success"
-          )}
-        >
-          {value}
-        </p>
-        <p className="mt-0.5 text-[10px] text-muted-foreground">{sub}</p>
-      </CardContent>
-    </Card>
+    <div className="px-4 py-3 sm:px-5 sm:py-3.5">
+      <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
+      <p
+        className={cn(
+          "mt-0.5 font-heading text-lg font-semibold tracking-tight tabular-nums sm:text-xl",
+          accent && "text-primary"
+        )}
+      >
+        {value}
+      </p>
+      <p className="mt-0.5 text-[10.5px] text-muted-foreground">{hint}</p>
+    </div>
   )
 }
 
