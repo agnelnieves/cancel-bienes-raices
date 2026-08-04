@@ -8,8 +8,11 @@ import {
   BadgeCheck,
   BadgeDollarSign,
   GitCompareArrows,
+  LayoutList,
   Lightbulb,
   Map as MapIcon,
+  PanelLeftClose,
+  PanelLeftOpen,
   RotateCcw,
   Search,
   SearchX,
@@ -18,7 +21,7 @@ import {
 } from "lucide-react"
 
 import {
-  formatCompact,
+  formatNumber,
   properties,
   propertyTypes,
   sourceMeta,
@@ -28,8 +31,12 @@ import {
 } from "@cancel/data"
 import {
   Button,
-  Card,
-  CardContent,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
   Input,
   Label,
   Select,
@@ -37,20 +44,60 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Slider,
   cn,
 } from "@cancel/ui"
 
 import { PropertyMap } from "@/components/map/property-map"
-import { PropertyCard } from "@/components/property-card"
+import { PropertyListItem } from "@/components/property-list-item"
 import { useSavedStore } from "@/lib/stores/saved"
 
 const ALL_SOURCES: PropertySource[] = ["cash", "mls", "registro", "crim"]
+
+const PRICE_CAPS = [
+  { value: 150000, label: "Hasta $150K" },
+  { value: 250000, label: "Hasta $250K" },
+  { value: 400000, label: "Hasta $400K" },
+  { value: 600000, label: "Hasta $600K" },
+  { value: 800000, label: "Sin límite" },
+] as const
+
+type MobilePane = "list" | "map"
+
+function Chip({
+  active,
+  onClick,
+  children,
+  className,
+}: {
+  active?: boolean
+  onClick?: () => void
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-medium whitespace-nowrap transition-colors outline-none",
+        "focus-visible:ring-2 focus-visible:ring-ring/40",
+        active
+          ? "border-foreground bg-foreground text-background"
+          : "border-border bg-background text-foreground hover:border-foreground/40",
+        className
+      )}
+    >
+      {children}
+    </button>
+  )
+}
 
 function ComparablesInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { compareIds, clearCompare } = useSavedStore()
+  const itemRefs = React.useRef(new Map<string, HTMLDivElement>())
 
   const [query, setQuery] = React.useState("")
   const [zoneId, setZoneId] = React.useState<string>(
@@ -62,9 +109,26 @@ function ComparablesInner() {
   const [sources, setSources] = React.useState<PropertySource[]>(ALL_SOURCES)
   const [onlyExclusive, setOnlyExclusive] = React.useState(false)
   const [sort, setSort] = React.useState("recientes")
-  const [showMap, setShowMap] = React.useState(true)
-  const [showFilters, setShowFilters] = React.useState(false)
   const [selectedId, setSelectedId] = React.useState<string | null>(null)
+  const [mobilePane, setMobilePane] = React.useState<MobilePane>("list")
+  const [filtersOpen, setFiltersOpen] = React.useState(false)
+  const [listOpen, setListOpen] = React.useState(true)
+
+  // Draft state for the filters dialog (apply on confirm)
+  const [draft, setDraft] = React.useState({
+    zoneId: "todas",
+    type: "todos",
+    status: "todas" as "todas" | PropertyStatus,
+    maxPrice: 800000,
+    sources: ALL_SOURCES as PropertySource[],
+    onlyExclusive: false,
+    sort: "recientes",
+  })
+
+  React.useEffect(() => {
+    const z = searchParams.get("zona")
+    if (z) setZoneId(z)
+  }, [searchParams])
 
   const filtered = React.useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -103,21 +167,42 @@ function ComparablesInner() {
     return { medianPpsf, avgDom, cashCount }
   }, [filtered])
 
-  const toggleSource = (s: PropertySource) =>
-    setSources((cur) =>
-      cur.includes(s) ? cur.filter((x) => x !== s) : [...cur, s]
-    )
+  const activeFilterCount = [
+    zoneId !== "todas",
+    type !== "todos",
+    status !== "todas",
+    maxPrice < 800000,
+    sources.length !== ALL_SOURCES.length,
+    onlyExclusive,
+  ].filter(Boolean).length
 
-  const hasActiveFilters =
-    query.trim() !== "" ||
-    zoneId !== "todas" ||
-    type !== "todos" ||
-    status !== "todas" ||
-    maxPrice < 800000 ||
-    sources.length !== ALL_SOURCES.length ||
-    onlyExclusive
+  const hasActiveFilters = activeFilterCount > 0 || query.trim() !== ""
 
-  const resetFilters = () => {
+  const openFiltersDialog = () => {
+    setDraft({
+      zoneId,
+      type,
+      status,
+      maxPrice,
+      sources: [...sources],
+      onlyExclusive,
+      sort,
+    })
+    setFiltersOpen(true)
+  }
+
+  const applyDraft = () => {
+    setZoneId(draft.zoneId)
+    setType(draft.type)
+    setStatus(draft.status)
+    setMaxPrice(draft.maxPrice)
+    setSources(draft.sources)
+    setOnlyExclusive(draft.onlyExclusive)
+    setSort(draft.sort)
+    setFiltersOpen(false)
+  }
+
+  const resetAll = () => {
     setQuery("")
     setZoneId("todas")
     setType("todos")
@@ -125,268 +210,566 @@ function ComparablesInner() {
     setMaxPrice(800000)
     setSources(ALL_SOURCES)
     setOnlyExclusive(false)
+    setSort("recientes")
+    setDraft({
+      zoneId: "todas",
+      type: "todos",
+      status: "todas",
+      maxPrice: 800000,
+      sources: ALL_SOURCES,
+      onlyExclusive: false,
+      sort: "recientes",
+    })
   }
 
+  const toggleSourceInDraft = (s: PropertySource) =>
+    setDraft((d) => ({
+      ...d,
+      sources: d.sources.includes(s)
+        ? d.sources.filter((x) => x !== s)
+        : [...d.sources, s],
+    }))
+
+  // Preview count for dialog footer
+  const draftCount = React.useMemo(() => {
+    return properties.filter((p) => {
+      if (draft.zoneId !== "todas" && p.zone !== draft.zoneId) return false
+      if (draft.type !== "todos" && p.type !== draft.type) return false
+      if (draft.status !== "todas" && p.status !== draft.status) return false
+      if (p.price > draft.maxPrice) return false
+      if (!draft.sources.includes(p.source)) return false
+      if (draft.onlyExclusive && p.source !== "cash") return false
+      return true
+    }).length
+  }, [draft])
+
+  React.useEffect(() => {
+    if (!selectedId) return
+    itemRefs.current
+      .get(selectedId)
+      ?.scrollIntoView({ block: "nearest", behavior: "smooth" })
+  }, [selectedId])
+
+  React.useEffect(() => {
+    if (selectedId && !filtered.some((p) => p.id === selectedId)) {
+      setSelectedId(null)
+    }
+  }, [filtered, selectedId])
+
   return (
-    <div className="space-y-4 animate-fade-in">
-      {/* Búsqueda + filtros guiados */}
-      <Card>
-        <CardContent className="space-y-3 p-4">
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Dirección, zona o pueblo… ej. Santurce, 00911, Calle Loíza"
-                className="h-11 rounded-full pl-10"
-              />
-            </div>
-            <Button
-              variant="outline"
-              size="lg"
-              className="lg:hidden"
-              onClick={() => setShowFilters((v) => !v)}
-              aria-expanded={showFilters}
-            >
-              <SlidersHorizontal className="size-4" />
-              Filtros
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="hidden sm:inline-flex"
-              onClick={() => setShowMap((v) => !v)}
-            >
-              <MapIcon className="size-4" />
-              {showMap ? "Ocultar mapa" : "Ver mapa"}
-            </Button>
-          </div>
+    <div className="relative h-full w-full">
+      {/* ── Layer 0: full-bleed map ───────────────────────────────────── */}
+      <PropertyMap
+        className="absolute inset-0 h-full w-full"
+        properties={filtered}
+        selectedId={selectedId}
+        boundsPadding={
+          listOpen
+            ? { top: 80, left: 420, right: 48, bottom: 48 }
+            : { top: 80, left: 48, right: 48, bottom: 48 }
+        }
+        onSelect={(id) => {
+          setSelectedId(id)
+          if (id && window.matchMedia("(max-width: 1023px)").matches) {
+            setMobilePane("map")
+          }
+        }}
+      />
 
-          <div className={cn("grid gap-3 sm:grid-cols-2 lg:grid-cols-5", !showFilters && "max-lg:hidden")}>
-            <div className="space-y-1.5">
-              <Label className="text-[11px]">¿En qué zona?</Label>
-              <Select value={zoneId} onValueChange={setZoneId}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todas">Todas las zonas</SelectItem>
-                  {zones.map((z) => (
-                    <SelectItem key={z.id} value={z.id}>
-                      {z.name}, {z.city}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-[11px]">Tipo de propiedad</Label>
-              <Select value={type} onValueChange={setType}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos</SelectItem>
-                  {propertyTypes.map((t) => (
-                    <SelectItem key={t} value={t}>
-                      {t}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-[11px]">Estado</Label>
-              <Select
-                value={status}
-                onValueChange={(v) => setStatus(v as typeof status)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todas">Vendidas + en venta</SelectItem>
-                  <SelectItem value="sold">Solo vendidas</SelectItem>
-                  <SelectItem value="active">Solo en venta</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-[11px]">
-                Precio máximo · {formatCompact(maxPrice)}
-              </Label>
-              <Slider
-                value={[maxPrice]}
-                onValueChange={([v]) => setMaxPrice(v)}
-                min={50000}
-                max={800000}
-                step={10000}
-                className="py-2.5"
-                aria-label="Precio máximo"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-[11px]">Ordenar por</Label>
-              <Select value={sort} onValueChange={setSort}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="recientes">Más recientes</SelectItem>
-                  <SelectItem value="precio-asc">Precio: menor a mayor</SelectItem>
-                  <SelectItem value="precio-desc">Precio: mayor a menor</SelectItem>
-                  <SelectItem value="ppsf">Mejor $/pc</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Fuentes — de dónde sale la data */}
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[11px] font-medium text-muted-foreground">
-              De dónde sale la data:
-            </span>
-            {ALL_SOURCES.map((s) => (
-              <button
-                key={s}
-                onClick={() => toggleSource(s)}
-                aria-pressed={sources.includes(s)}
-                className={cn(
-                  "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
-                  sources.includes(s)
-                    ? s === "cash"
-                      ? "border-cash/40 bg-cash-soft text-cash"
-                      : "border-border bg-muted text-foreground"
-                    : "border-border text-muted-foreground/60 hover:text-muted-foreground"
-                )}
-              >
-                {s === "cash" && sources.includes(s) && (
-                  <BadgeCheck className="size-3" aria-hidden />
-                )}
-                {sourceMeta[s].label}
-              </button>
-            ))}
+      {/* ── Layer 1: Airbnb-style filter bar ──────────────────────────── */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-20 p-3 sm:p-4">
+        <div className="pointer-events-auto mx-auto flex max-w-full items-center gap-0 overflow-hidden rounded-full border border-border/80 bg-background/95 py-1.5 pr-1.5 pl-1.5 shadow-lift backdrop-blur-xl">
+          <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto no-scrollbar">
+            {/* Filters button */}
             <button
-              onClick={() => setOnlyExclusive((v) => !v)}
-              aria-pressed={onlyExclusive}
+              type="button"
+              onClick={openFiltersDialog}
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/40 max-sm:w-full max-sm:justify-center sm:ml-auto",
-                onlyExclusive
-                  ? "border-cash bg-cash text-cash-foreground"
-                  : "border-cash/40 text-cash hover:bg-cash-soft/60"
+                "inline-flex h-9 shrink-0 items-center gap-2 rounded-full border px-3.5 text-[13px] font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+                activeFilterCount > 0
+                  ? "border-foreground bg-background text-foreground"
+                  : "border-border bg-background text-foreground hover:border-foreground/40"
               )}
             >
-              <BadgeDollarSign className="size-3" aria-hidden />
-              Solo cash deals exclusivos
+              <SlidersHorizontal className="size-3.5" />
+              Filtros
+              {activeFilterCount > 0 && (
+                <span className="flex size-5 items-center justify-center rounded-full bg-foreground text-[11px] font-bold text-background">
+                  {activeFilterCount}
+                </span>
+              )}
             </button>
+
+            <span
+              className="mx-0.5 hidden h-5 w-px shrink-0 bg-border sm:block"
+              aria-hidden
+            />
+
+            <Chip
+              active={onlyExclusive || (sources.length === 1 && sources[0] === "cash")}
+              onClick={() => {
+                if (onlyExclusive) {
+                  setOnlyExclusive(false)
+                  setSources(ALL_SOURCES)
+                } else {
+                  setOnlyExclusive(true)
+                  setSources(["cash"])
+                }
+              }}
+            >
+              <BadgeDollarSign className="size-3.5" />
+              Cash deals
+            </Chip>
+
+            <Chip
+              active={status === "active"}
+              onClick={() =>
+                setStatus((s) => (s === "active" ? "todas" : "active"))
+              }
+            >
+              En venta
+            </Chip>
+
+            <Chip
+              active={status === "sold"}
+              onClick={() =>
+                setStatus((s) => (s === "sold" ? "todas" : "sold"))
+              }
+            >
+              Vendidas
+            </Chip>
+
+            <Chip
+              active={maxPrice <= 250000}
+              onClick={() =>
+                setMaxPrice((p) => (p <= 250000 ? 800000 : 250000))
+              }
+            >
+              ≤ $250K
+            </Chip>
+
+            <Chip
+              active={type === "Casa"}
+              onClick={() => setType((t) => (t === "Casa" ? "todos" : "Casa"))}
+            >
+              Casa
+            </Chip>
+
+            <Chip
+              active={type === "Multifamiliar"}
+              onClick={() =>
+                setType((t) =>
+                  t === "Multifamiliar" ? "todos" : "Multifamiliar"
+                )
+              }
+            >
+              Multifamiliar
+            </Chip>
+
+            <Chip
+              active={type === "Apartamento"}
+              onClick={() =>
+                setType((t) => (t === "Apartamento" ? "todos" : "Apartamento"))
+              }
+            >
+              Apartamento
+            </Chip>
+
             {hasActiveFilters && (
               <button
-                onClick={resetFilters}
-                className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40"
+                type="button"
+                onClick={resetAll}
+                className="inline-flex h-9 shrink-0 items-center gap-1 rounded-full px-3 text-[12px] font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
-                <RotateCcw className="size-3" aria-hidden />
-                Limpiar filtros
+                <RotateCcw className="size-3" />
+                Limpiar
               </button>
             )}
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Mapa */}
-      {showMap && (
-        <PropertyMap
-          className="h-[340px] sm:h-[400px]"
-          properties={filtered}
-          selectedId={selectedId}
-          onSelect={(id) => setSelectedId(id)}
-        />
-      )}
+          {/* Mobile list/map + desktop list toggle */}
+          <div className="ml-1 flex shrink-0 items-center gap-1 border-l border-border pl-1.5">
+            <div className="flex rounded-full border border-border p-0.5 lg:hidden">
+              <button
+                type="button"
+                onClick={() => setMobilePane("list")}
+                className={cn(
+                  "flex size-8 items-center justify-center rounded-full transition-colors",
+                  mobilePane === "list"
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground"
+                )}
+                aria-label="Vista lista"
+              >
+                <LayoutList className="size-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setMobilePane("map")}
+                className={cn(
+                  "flex size-8 items-center justify-center rounded-full transition-colors",
+                  mobilePane === "map"
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground"
+                )}
+                aria-label="Vista mapa"
+              >
+                <MapIcon className="size-3.5" />
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => setListOpen((v) => !v)}
+              className="hidden size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:flex"
+              aria-label={listOpen ? "Ocultar lista" : "Mostrar lista"}
+            >
+              {listOpen ? (
+                <PanelLeftClose className="size-4" />
+              ) : (
+                <PanelLeftOpen className="size-4" />
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
 
-      {/* Lo que encontré — resumen en palabras sencillas */}
-      {filtered.length > 0 && stats && (
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-2xl border border-border bg-card px-4 py-3 text-sm shadow-card">
-          <span className="font-semibold">
-            {filtered.length}{" "}
-            <span className="font-normal text-muted-foreground">
-              {filtered.length === 1
-                ? "propiedad encontrada"
-                : "propiedades encontradas"}
+      {/* ── Layer 2: floating results list ────────────────────────────── */}
+      <div
+        className={cn(
+          "absolute z-10 flex flex-col overflow-hidden rounded-2xl border border-border/80 bg-background/95 shadow-lift backdrop-blur-xl transition-all duration-200",
+          // Desktop: left panel under filters
+          "lg:top-[4.25rem] lg:bottom-3 lg:left-3 lg:w-[min(400px,calc(100%-1.5rem))]",
+          listOpen ? "lg:opacity-100 lg:translate-x-0" : "lg:pointer-events-none lg:opacity-0 lg:-translate-x-2",
+          // Mobile: full width under filters when list pane active
+          mobilePane === "list"
+            ? "inset-x-3 top-[4.25rem] bottom-[4.5rem] opacity-100"
+            : "pointer-events-none inset-x-3 top-[4.25rem] bottom-[4.5rem] opacity-0 max-lg:hidden"
+        )}
+      >
+        {/* List header: search + meta */}
+        <div className="shrink-0 border-b border-border/70 p-3">
+          <div className="relative">
+            <Search className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar dirección o pueblo…"
+              className="h-9 rounded-full border-border/80 bg-muted/40 pl-9 text-[13px]"
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                className="absolute top-1/2 right-2.5 -translate-y-1/2 rounded-full p-0.5 text-muted-foreground hover:text-foreground"
+                aria-label="Limpiar"
+              >
+                <X className="size-3.5" />
+              </button>
+            )}
+          </div>
+          <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px]">
+            <span>
+              <span className="font-semibold tabular-nums">
+                {formatNumber(filtered.length)}
+              </span>{" "}
+              <span className="text-muted-foreground">
+                {filtered.length === 1 ? "resultado" : "resultados"}
+              </span>
             </span>
-          </span>
-          <span className="text-muted-foreground">
-            Precio típico{" "}
-            <span className="font-medium text-foreground">
-              ${stats.medianPpsf}/pc
-            </span>
-          </span>
-          <span className="text-muted-foreground">
-            Se venden en{" "}
-            <span className="font-medium text-foreground">
-              ~{stats.avgDom} días
-            </span>
-          </span>
-          {stats.cashCount > 0 && (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-cash/30 bg-cash-soft px-2.5 py-1 text-xs font-semibold text-cash">
-              <BadgeCheck className="size-3.5" aria-hidden />
-              {stats.cashCount} cash deal{stats.cashCount > 1 ? "s" : ""}{" "}
-              exclusivo{stats.cashCount > 1 ? "s" : ""} de la red
-            </span>
+            {stats && (
+              <>
+                <span className="text-muted-foreground">
+                  ${stats.medianPpsf}/pc
+                </span>
+                <span className="text-muted-foreground">~{stats.avgDom}d</span>
+                {stats.cashCount > 0 && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-cash-soft px-1.5 py-0.5 text-[10px] font-semibold text-cash">
+                    <BadgeCheck className="size-3" />
+                    {stats.cashCount} cash
+                  </span>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          {filtered.length > 0 ? (
+            filtered.map((p) => (
+              <div
+                key={p.id}
+                ref={(el) => {
+                  if (el) itemRefs.current.set(p.id, el)
+                  else itemRefs.current.delete(p.id)
+                }}
+              >
+                <PropertyListItem
+                  property={p}
+                  selected={p.id === selectedId}
+                  onSelect={(id) => {
+                    setSelectedId(id)
+                    if (window.matchMedia("(max-width: 1023px)").matches) {
+                      setMobilePane("map")
+                    }
+                  }}
+                />
+              </div>
+            ))
+          ) : (
+            <div className="flex flex-col items-center gap-3 px-6 py-14 text-center">
+              <span className="flex size-11 items-center justify-center rounded-xl bg-muted">
+                <SearchX className="size-5 text-muted-foreground/60" />
+              </span>
+              <div>
+                <p className="font-heading text-sm font-semibold">
+                  Nada con estos filtros
+                </p>
+                <p className="mt-1 max-w-[220px] text-[12px] text-muted-foreground">
+                  Amplía el precio, quita la zona o limpia los chips.
+                </p>
+              </div>
+              <ul className="space-y-1.5 text-left text-[12px] text-muted-foreground">
+                <li className="flex items-start gap-2">
+                  <Lightbulb
+                    className="mt-0.5 size-3 shrink-0 text-primary"
+                    aria-hidden
+                  />
+                  Prueba “Sin límite” o desactiva “Cash deals”.
+                </li>
+              </ul>
+              <Button
+                size="sm"
+                variant="outline"
+                className="mt-1 rounded-full"
+                onClick={resetAll}
+              >
+                <RotateCcw className="size-3.5" />
+                Limpiar filtros
+              </Button>
+            </div>
           )}
         </div>
-      )}
+      </div>
 
-      {/* Resultados */}
-      {filtered.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((p) => (
-            <div
-              key={p.id}
-              onMouseEnter={() => setSelectedId(p.id)}
-              onMouseLeave={() => setSelectedId(null)}
+      {/* ── Filters dialog (Airbnb modal) ─────────────────────────────── */}
+      <Dialog open={filtersOpen} onOpenChange={setFiltersOpen}>
+        <DialogContent
+          className="flex max-h-[min(720px,90dvh)] max-w-lg flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:max-w-lg"
+          showCloseButton
+        >
+          <DialogHeader className="shrink-0 border-b border-border px-5 py-4">
+            <DialogTitle className="text-center text-base font-semibold">
+              Filtros
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              Filtra comparables por zona, tipo, precio y fuente
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 py-5">
+            {/* Quick amenity-style source grid */}
+            <section>
+              <h3 className="mb-3 text-sm font-semibold">Fuente de data</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {ALL_SOURCES.map((s) => {
+                  const on = draft.sources.includes(s)
+                  return (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => toggleSourceInDraft(s)}
+                      className={cn(
+                        "flex flex-col items-start gap-1 rounded-xl border p-3 text-left transition-colors",
+                        on
+                          ? s === "cash"
+                            ? "border-cash/50 bg-cash-soft"
+                            : "border-foreground bg-muted/40"
+                          : "border-border hover:border-foreground/30"
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "text-[13px] font-semibold",
+                          s === "cash" && on ? "text-cash" : "text-foreground"
+                        )}
+                      >
+                        {sourceMeta[s].label}
+                      </span>
+                      <span className="text-[11px] leading-snug text-muted-foreground">
+                        {s === "cash"
+                          ? "Exclusivo de la red"
+                          : sourceMeta[s].description.slice(0, 48) + "…"}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  setDraft((d) => ({
+                    ...d,
+                    onlyExclusive: !d.onlyExclusive,
+                    sources: !d.onlyExclusive ? (["cash"] as PropertySource[]) : ALL_SOURCES,
+                  }))
+                }
+                className={cn(
+                  "mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-[13px] font-semibold transition-colors",
+                  draft.onlyExclusive
+                    ? "border-cash bg-cash text-cash-foreground"
+                    : "border-cash/35 text-cash hover:bg-cash-soft/60"
+                )}
+              >
+                <BadgeDollarSign className="size-3.5" />
+                Solo cash deals exclusivos
+              </button>
+            </section>
+
+            <section>
+              <h3 className="mb-3 text-sm font-semibold">Tipo de propiedad</h3>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { id: "todos", label: "Todos" },
+                  ...propertyTypes.map((t) => ({ id: t, label: t })),
+                ].map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setDraft((d) => ({ ...d, type: opt.id }))}
+                    className={cn(
+                      "rounded-full border px-3.5 py-2 text-[13px] font-medium transition-colors",
+                      draft.type === opt.id
+                        ? "border-foreground bg-foreground text-background"
+                        : "border-border text-foreground hover:border-foreground/40"
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            <section>
+              <h3 className="mb-3 text-sm font-semibold">Estado</h3>
+              <div className="flex gap-1.5 rounded-full border border-border p-1">
+                {(
+                  [
+                    { id: "todas", label: "Todas" },
+                    { id: "active", label: "En venta" },
+                    { id: "sold", label: "Vendidas" },
+                  ] as const
+                ).map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() =>
+                      setDraft((d) => ({ ...d, status: opt.id }))
+                    }
+                    className={cn(
+                      "flex-1 rounded-full px-3 py-2 text-[13px] font-medium transition-colors",
+                      draft.status === opt.id
+                        ? "bg-foreground text-background"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            <section>
+              <h3 className="mb-3 text-sm font-semibold">Precio máximo</h3>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {PRICE_CAPS.map((cap) => (
+                  <button
+                    key={cap.value}
+                    type="button"
+                    onClick={() =>
+                      setDraft((d) => ({ ...d, maxPrice: cap.value }))
+                    }
+                    className={cn(
+                      "rounded-xl border px-3 py-2.5 text-[13px] font-medium transition-colors",
+                      draft.maxPrice === cap.value
+                        ? "border-foreground bg-foreground text-background"
+                        : "border-border hover:border-foreground/30"
+                    )}
+                  >
+                    {cap.label}
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            <section className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label className="text-[12px] font-semibold">Zona</Label>
+                <Select
+                  value={draft.zoneId}
+                  onValueChange={(v) =>
+                    setDraft((d) => ({ ...d, zoneId: v }))
+                  }
+                >
+                  <SelectTrigger className="h-10 w-full rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todas">Todas las zonas</SelectItem>
+                    {zones.map((z) => (
+                      <SelectItem key={z.id} value={z.id}>
+                        {z.name}, {z.city}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[12px] font-semibold">Ordenar</Label>
+                <Select
+                  value={draft.sort}
+                  onValueChange={(v) => setDraft((d) => ({ ...d, sort: v }))}
+                >
+                  <SelectTrigger className="h-10 w-full rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="recientes">Más recientes</SelectItem>
+                    <SelectItem value="precio-asc">
+                      Precio: menor → mayor
+                    </SelectItem>
+                    <SelectItem value="precio-desc">
+                      Precio: mayor → menor
+                    </SelectItem>
+                    <SelectItem value="ppsf">Mejor $/pc</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </section>
+          </div>
+
+          <DialogFooter className="shrink-0 flex-row items-center justify-between gap-3 border-t border-border px-5 py-4 sm:justify-between">
+            <button
+              type="button"
+              onClick={() => {
+                resetAll()
+                setFiltersOpen(false)
+              }}
+              className="text-[13px] font-medium text-foreground underline-offset-4 hover:underline"
             >
-              <PropertyCard property={p} />
-            </div>
-          ))}
-        </div>
-      ) : (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center gap-3 py-14 text-center">
-            <span className="flex size-12 items-center justify-center rounded-2xl bg-muted">
-              <SearchX className="size-6 text-muted-foreground/60" />
-            </span>
-            <div>
-              <p className="font-heading font-semibold">
-                Nada por aquí con estos filtros
-              </p>
-              <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-                No te preocupes — esto pasa cuando los filtros quedan muy
-                estrechos. Esto es lo que puedes hacer:
-              </p>
-            </div>
-            <ul className="mx-auto max-w-sm space-y-1.5 text-left text-[13px] text-muted-foreground">
-              <li className="flex items-start gap-2">
-                <Lightbulb className="mt-0.5 size-3.5 shrink-0 text-primary" aria-hidden />
-                Sube el precio máximo o quita la zona para ver más opciones.
-              </li>
-              <li className="flex items-start gap-2">
-                <Lightbulb className="mt-0.5 size-3.5 shrink-0 text-primary" aria-hidden />
-                Marca todas las fuentes — la exclusiva son solo los cash deals.
-              </li>
-              <li className="flex items-start gap-2">
-                <Lightbulb className="mt-0.5 size-3.5 shrink-0 text-primary" aria-hidden />
-                O pídele al copiloto con ⌘K que busque por ti en español.
-              </li>
-            </ul>
-            <Button size="sm" className="mt-1" onClick={resetFilters}>
-              <RotateCcw className="size-3.5" />
-              Limpiar filtros y empezar de nuevo
+              Limpiar todo
+            </button>
+            <Button
+              className="rounded-full px-5"
+              onClick={applyDraft}
+            >
+              Ver {formatNumber(draftCount)}{" "}
+              {draftCount === 1 ? "resultado" : "resultados"}
             </Button>
-          </CardContent>
-        </Card>
-      )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      {/* Bandeja de comparación */}
+      {/* Compare tray */}
       {compareIds.length > 0 && (
         <div className="fixed inset-x-4 bottom-20 z-40 mx-auto flex max-w-md items-center justify-between gap-3 rounded-full border border-border bg-card/95 py-2 pr-2 pl-5 shadow-lift backdrop-blur-lg lg:bottom-5">
           <div className="flex items-center gap-2 text-sm">
@@ -396,10 +779,19 @@ function ComparablesInner() {
             </span>
           </div>
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon-sm" onClick={clearCompare} aria-label="Limpiar comparador">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={clearCompare}
+              aria-label="Limpiar comparador"
+            >
               <X className="size-4" />
             </Button>
-            <Button size="sm" onClick={() => router.push("/comparador")}>
+            <Button
+              size="sm"
+              className="rounded-full"
+              onClick={() => router.push("/comparador")}
+            >
               Comparar
               <ArrowRight className="size-3.5" />
             </Button>
@@ -412,7 +804,13 @@ function ComparablesInner() {
 
 export default function ComparablesPage() {
   return (
-    <Suspense>
+    <Suspense
+      fallback={
+        <div className="flex h-full items-center justify-center bg-muted/30">
+          <div className="size-8 animate-pulse rounded-full bg-muted" />
+        </div>
+      }
+    >
       <ComparablesInner />
     </Suspense>
   )

@@ -10,15 +10,28 @@ import {
   Home,
   KanbanSquare,
   Landmark,
+  PanelLeftClose,
+  PanelLeftOpen,
   Ruler,
   Search,
   Users,
 } from "lucide-react"
 
-import { cn } from "@cancel/ui"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+  cn,
+} from "@cancel/ui"
 
 import { useSavedStore } from "@/lib/stores/saved"
 import { usePipelineStore } from "@/lib/stores/pipeline"
+import {
+  SIDEBAR_WIDTH,
+  SIDEBAR_WIDTH_COLLAPSED,
+  useShellStore,
+} from "@/lib/stores/shell"
 import { Logo } from "./logo"
 
 interface NavItem {
@@ -42,8 +55,18 @@ const sections: { label: string; items: NavItem[] }[] = [
   {
     label: "Tu portafolio",
     items: [
-      { href: "/deals", label: "Deal Tracker", icon: KanbanSquare, badge: "deals" },
-      { href: "/comparador", label: "Comparador", icon: GitCompareArrows, badge: "compare" },
+      {
+        href: "/deals",
+        label: "Deal Tracker",
+        icon: KanbanSquare,
+        badge: "deals",
+      },
+      {
+        href: "/comparador",
+        label: "Comparador",
+        icon: GitCompareArrows,
+        badge: "compare",
+      },
       { href: "/credito", label: "Crédito", icon: Landmark },
     ],
   },
@@ -59,6 +82,8 @@ const sections: { label: string; items: NavItem[] }[] = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const collapsed = useShellStore((s) => s.sidebarCollapsed)
+  const toggleSidebar = useShellStore((s) => s.toggleSidebar)
   const compareCount = useSavedStore((s) => s.compareIds.length)
   const dealsCount = usePipelineStore(
     (s) => s.deals.filter((d) => d.stage !== "cierre").length
@@ -70,69 +95,159 @@ export function Sidebar() {
     return null
   }
 
+  const width = collapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH
+
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
-      <div className="flex h-16 items-center px-5">
-        <Link href="/" aria-label="Inicio">
-          <Logo />
-        </Link>
-      </div>
-
-      <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-2">
-        {sections.map((section) => (
-          <div key={section.label}>
-            <p className="mb-1.5 px-2.5 text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
-              {section.label}
-            </p>
-            <div className="space-y-0.5">
-              {section.items.map((item) => {
-                const active = item.exact
-                  ? pathname === item.href
-                  : pathname.startsWith(item.href)
-                const badge = badgeValue(item.badge)
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      "group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] font-medium transition-colors",
-                      active
-                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    )}
-                  >
-                    <item.icon
-                      className={cn(
-                        "size-4 shrink-0",
-                        active ? "text-primary" : "text-muted-foreground/70 group-hover:text-foreground"
-                      )}
-                    />
-                    <span className="flex-1 truncate">{item.label}</span>
-                    {badge !== null && (
-                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary/12 px-1.5 text-[10px] font-semibold text-primary">
-                        {badge}
-                      </span>
-                    )}
-                  </Link>
-                )
-              })}
-            </div>
-          </div>
-        ))}
-      </nav>
-
-      <div className="border-t border-sidebar-border p-3">
-        <div className="rounded-xl bg-sidebar-accent/60 p-3">
-          <div className="flex items-center gap-2">
-            <Building2 className="size-3.5 text-primary" />
-            <p className="text-[11px] font-semibold">Data exclusiva</p>
-          </div>
-          <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
-            23 cash deals reportados este mes por la red de realtors.
-          </p>
+    <TooltipProvider delayDuration={0}>
+      <aside
+        className="fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-200 ease-out lg:flex"
+        style={{ width }}
+        data-collapsed={collapsed || undefined}
+      >
+        <div
+          className={cn(
+            "flex h-14 shrink-0 items-center",
+            collapsed ? "justify-center px-2" : "px-4"
+          )}
+        >
+          <Link href="/" aria-label="Inicio" className="outline-none">
+            {collapsed ? (
+              <span className="flex size-8 items-center justify-center rounded-[10px] bg-primary font-heading text-[15px] font-extrabold tracking-tight text-primary-foreground">
+                C
+              </span>
+            ) : (
+              <Logo />
+            )}
+          </Link>
         </div>
-      </div>
-    </aside>
+
+        <nav
+          className={cn(
+            "flex-1 overflow-y-auto overflow-x-hidden py-1",
+            collapsed ? "px-2 space-y-1" : "space-y-5 px-2.5"
+          )}
+        >
+          {sections.map((section) => (
+            <div key={section.label}>
+              {!collapsed && (
+                <p className="mb-1 px-2.5 text-[10px] font-medium tracking-[0.08em] text-muted-foreground/80 uppercase">
+                  {section.label}
+                </p>
+              )}
+              {collapsed && section !== sections[0] && (
+                <div className="mx-auto my-2 h-px w-6 bg-sidebar-border" />
+              )}
+              <div className="space-y-px">
+                {section.items.map((item) => {
+                  const active = item.exact
+                    ? pathname === item.href
+                    : pathname.startsWith(item.href)
+                  const badge = badgeValue(item.badge)
+
+                  const link = (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      aria-label={item.label}
+                      className={cn(
+                        "group relative flex items-center rounded-lg text-[13px] font-medium transition-colors",
+                        collapsed
+                          ? "size-10 justify-center mx-auto"
+                          : "gap-2.5 px-2.5 py-[7px]",
+                        active
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                          : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                      )}
+                    >
+                      <item.icon
+                        className={cn(
+                          "size-[15px] shrink-0",
+                          active
+                            ? "text-primary"
+                            : "text-muted-foreground/65 group-hover:text-foreground"
+                        )}
+                      />
+                      {!collapsed && (
+                        <>
+                          <span className="flex-1 truncate">{item.label}</span>
+                          {badge !== null && (
+                            <span
+                              className={cn(
+                                "flex h-5 min-w-5 items-center justify-center rounded-md px-1.5 text-[10px] font-semibold tabular-nums",
+                                active
+                                  ? "bg-primary/15 text-primary"
+                                  : "bg-muted text-muted-foreground"
+                              )}
+                            >
+                              {badge}
+                            </span>
+                          )}
+                        </>
+                      )}
+                      {collapsed && badge !== null && (
+                        <span className="absolute top-1.5 right-1.5 flex size-1.5 rounded-full bg-primary" />
+                      )}
+                    </Link>
+                  )
+
+                  if (!collapsed) return link
+
+                  return (
+                    <Tooltip key={item.href}>
+                      <TooltipTrigger asChild>{link}</TooltipTrigger>
+                      <TooltipContent side="right" sideOffset={8}>
+                        {item.label}
+                        {badge !== null ? ` (${badge})` : ""}
+                      </TooltipContent>
+                    </Tooltip>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+        </nav>
+
+        <div
+          className={cn(
+            "shrink-0 border-t border-sidebar-border",
+            collapsed ? "p-2" : "p-3"
+          )}
+        >
+          {!collapsed && (
+            <div className="mb-2 rounded-lg bg-sidebar-accent/50 px-3 py-2.5">
+              <div className="flex items-center gap-1.5">
+                <Building2 className="size-3 text-primary" />
+                <p className="text-[11px] font-semibold">Data exclusiva</p>
+              </div>
+              <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
+                23 cash deals reportados este mes por la red de realtors.
+              </p>
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            aria-label={collapsed ? "Expandir menú" : "Colapsar menú"}
+            className={cn(
+              "flex w-full items-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground",
+              collapsed
+                ? "size-10 mx-auto justify-center"
+                : "gap-2.5 px-2.5 py-2 text-[12px] font-medium"
+            )}
+          >
+            {collapsed ? (
+              <PanelLeftOpen className="size-4" />
+            ) : (
+              <>
+                <PanelLeftClose className="size-4 shrink-0" />
+                <span>Colapsar</span>
+              </>
+            )}
+          </button>
+        </div>
+      </aside>
+    </TooltipProvider>
   )
 }
 

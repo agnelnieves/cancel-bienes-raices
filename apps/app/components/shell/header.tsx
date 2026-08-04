@@ -34,7 +34,7 @@ import { useUserStore } from "@/lib/stores/user"
 import { Logo } from "./logo"
 
 const TITLES: Record<string, { title: string; subtitle: string }> = {
-  "/": { title: "Inicio", subtitle: "Tu semana de inversión de un vistazo" },
+  "/": { title: "Inicio", subtitle: "Tu centro de inversión" },
   "/comparables": {
     title: "Comparables",
     subtitle: "Ventas reales — incluyendo cash deals exclusivos",
@@ -67,14 +67,17 @@ const TITLES: Record<string, { title: string; subtitle: string }> = {
     title: "Red de contratistas",
     subtitle: "Profesionales vetados por la comunidad",
   },
-  "/configuracion": { title: "Configuración", subtitle: "Tu cuenta y preferencias" },
+  "/configuracion": {
+    title: "Configuración",
+    subtitle: "Tu cuenta y preferencias",
+  },
 }
 
-const activityIcon: Record<string, string> = {
-  cash: "text-primary bg-primary/10",
-  comparable: "text-blue-500 bg-blue-500/10",
-  deal: "text-amber-500 bg-amber-500/10",
-  sistema: "text-muted-foreground bg-muted",
+const activityDot: Record<string, string> = {
+  cash: "bg-cash",
+  comparable: "bg-info",
+  deal: "bg-primary",
+  sistema: "bg-muted-foreground/40",
 }
 
 export function Header() {
@@ -84,6 +87,7 @@ export function Header() {
   const toggleAssistant = useAssistantStore((s) => s.toggle)
   const profile = useUserStore((s) => s.profile)
   const resetUser = useUserStore((s) => s.reset)
+  const isHome = pathname === "/"
   const meta = TITLES[pathname] ?? { title: "Cancel", subtitle: "" }
 
   const initials =
@@ -105,58 +109,75 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur-lg">
-      <div className="flex h-16 items-center gap-3 px-4 sm:px-6">
+    <header className="sticky top-0 z-20 border-b border-border/80 bg-background/80 backdrop-blur-xl">
+      <div className="flex h-14 items-center gap-3 px-4 sm:px-6">
         <LinkLogoMobile />
 
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate font-heading text-[15px] font-bold tracking-tight">
-            {meta.title}
-          </h1>
-          <p className="hidden truncate text-xs text-muted-foreground sm:block">
-            {meta.subtitle}
-          </p>
-        </div>
+        {/* On home, page owns the greeting — header stays as a quiet toolbar */}
+        {!isHome && (
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate font-heading text-[15px] font-semibold tracking-tight">
+              {meta.title}
+            </h1>
+            <p className="hidden truncate text-[11px] text-muted-foreground sm:block">
+              {meta.subtitle}
+            </p>
+          </div>
+        )}
+        {isHome && <div className="min-w-0 flex-1" />}
 
-        {/* Trigger del asistente */}
         <button
+          type="button"
           onClick={toggleAssistant}
-          className="hidden h-9 items-center gap-2 rounded-full border border-input bg-transparent px-3.5 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground sm:flex"
+          className="hidden h-8 items-center gap-2 rounded-lg border border-border/80 bg-background px-3 text-sm text-muted-foreground transition-colors hover:border-primary/35 hover:text-foreground sm:flex"
         >
           <Sparkles className="size-3.5 text-primary" />
-          <span className="text-[13px]">Pregúntale al copiloto…</span>
-          <kbd className="rounded-md border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium">
+          <span className="text-[12.5px]">Pregúntale al copiloto…</span>
+          <kbd className="rounded border border-border bg-muted/80 px-1.5 py-px text-[10px] font-medium text-muted-foreground">
             ⌘K
           </kbd>
         </button>
 
-        {/* Notificaciones */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative" aria-label="Notificaciones">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="relative"
+              aria-label="Notificaciones"
+            >
               <Bell className="size-4" />
-              <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-primary" />
+              <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-primary" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-80">
             <DropdownMenuLabel>Actividad reciente</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {recentActivity.slice(0, 5).map((a) => (
-              <DropdownMenuItem key={a.id} className="flex items-start gap-2.5 py-2.5">
-                <span className={cn("mt-0.5 size-2 shrink-0 rounded-full", activityIcon[a.type].split(" ")[0].replace("text-", "bg-"))} />
+              <DropdownMenuItem
+                key={a.id}
+                className="flex items-start gap-2.5 py-2.5"
+              >
+                <span
+                  className={cn(
+                    "mt-1.5 size-1.5 shrink-0 rounded-full",
+                    activityDot[a.type] ?? "bg-muted-foreground/40"
+                  )}
+                />
                 <span className="min-w-0">
                   <span className="block truncate text-[13px]">{a.message}</span>
-                  <span className="block text-[11px] text-muted-foreground">{a.time}</span>
+                  <span className="block text-[11px] text-muted-foreground">
+                    {a.time}
+                  </span>
                 </span>
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Tema */}
         <Button
           variant="ghost"
-          size="icon"
+          size="icon-sm"
           aria-label="Cambiar tema"
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
         >
@@ -164,12 +185,11 @@ export function Header() {
           <Moon className="hidden size-4 dark:block" />
         </Button>
 
-        {/* Perfil */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="outline-none">
-              <Avatar className="size-9 border border-border">
-                <AvatarFallback className="bg-primary/10 text-xs font-bold text-primary">
+            <button type="button" className="outline-none">
+              <Avatar className="size-8 border border-border">
+                <AvatarFallback className="bg-primary/10 text-[11px] font-bold text-primary">
                   {initials}
                 </AvatarFallback>
               </Avatar>
