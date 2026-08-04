@@ -180,12 +180,12 @@ export default function EstimadorPage() {
                   className={cn(
                     "flex items-start justify-between gap-3 rounded-xl border p-3 text-left transition-all",
                     active
-                      ? "border-primary/40 bg-primary/5"
-                      : "border-border hover:border-muted-foreground/30"
+                      ? "border-foreground/15 bg-muted/60"
+                      : "border-border hover:border-foreground/20 hover:bg-muted/30"
                   )}
                 >
                   <div className="min-w-0">
-                    <p className={cn("text-[13px] font-medium", active && "text-primary")}>
+                    <p className={cn("text-[13px] font-medium", active && "text-foreground")}>
                       {item.label}
                     </p>
                     <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
@@ -211,7 +211,7 @@ export default function EstimadorPage() {
 
       {/* ------------------------------ Resultado ------------------------------ */}
       <div className="space-y-4 lg:col-span-2">
-        <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/8 to-transparent">
+        <Card>
           <CardContent className="p-5">
             <p className="text-xs font-medium text-muted-foreground">
               Presupuesto total estimado
@@ -323,10 +323,10 @@ export default function EstimadorPage() {
         </Button>
 
         <Link href="/contratistas" className="block">
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/6 to-transparent transition-all hover:border-primary/40 hover:shadow-soft">
+          <Card className="transition-shadow hover:shadow-soft">
             <CardContent className="flex items-center justify-between gap-3 p-4">
               <div className="flex items-center gap-3">
-                <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10">
+                <div className="flex size-9 items-center justify-center rounded-xl bg-muted">
                   <Hammer className="size-4 text-primary" />
                 </div>
                 <div>

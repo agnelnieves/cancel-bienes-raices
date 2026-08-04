@@ -3,16 +3,7 @@
 import * as React from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
-import {
-  Bell,
-  CircleUser,
-  LogOut,
-  Moon,
-  RotateCcw,
-  Settings,
-  Sparkles,
-  Sun,
-} from "lucide-react"
+import { CircleUser, LogOut, Moon, RotateCcw, Settings, Sun } from "lucide-react"
 import { toast } from "sonner"
 
 import { recentActivity } from "@cancel/data"
@@ -26,10 +17,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  Separator,
   cn,
 } from "@cancel/ui"
 
+import { BellIcon, PanelLeftOpenIcon, SparklesIcon } from "@/components/icons"
 import { useAssistantStore } from "@/lib/stores/assistant"
+import { useShellStore } from "@/lib/stores/shell"
 import { useUserStore } from "@/lib/stores/user"
 import { Logo } from "./logo"
 
@@ -80,6 +74,26 @@ const activityDot: Record<string, string> = {
   sistema: "bg-muted-foreground/40",
 }
 
+/** Sidebar trigger — matches shadcn sidebar-08 header control */
+function SidebarTrigger({ className }: { className?: string }) {
+  const collapsed = useShellStore((s) => s.sidebarCollapsed)
+  const toggleSidebar = useShellStore((s) => s.toggleSidebar)
+
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon-sm"
+      className={cn("hidden lg:inline-flex", className)}
+      onClick={toggleSidebar}
+      aria-label={collapsed ? "Expandir menú" : "Colapsar menú"}
+      aria-pressed={collapsed}
+    >
+      <PanelLeftOpenIcon size={16} className="[&>svg]:block" />
+    </Button>
+  )
+}
+
 export function Header() {
   const pathname = usePathname()
   const router = useRouter()
@@ -109,9 +123,17 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-20 border-b border-border/80 bg-background/80 backdrop-blur-xl">
-      <div className="flex h-14 items-center gap-3 px-4 sm:px-6">
-        <LinkLogoMobile />
+    <header className="sticky top-0 z-20 shrink-0 border-b border-border/50 bg-background/90 backdrop-blur-xl lg:rounded-t-xl">
+      <div className="flex h-14 items-center gap-2 px-3 sm:gap-3 sm:px-4 lg:px-5">
+        <SidebarTrigger className="-ml-1" />
+        <Separator
+          orientation="vertical"
+          className="mr-1 hidden h-4 self-auto data-vertical:h-4 lg:block"
+        />
+
+        <span className="lg:hidden">
+          <Logo markClassName="size-7 text-sm" />
+        </span>
 
         {/* On home, page owns the greeting — header stays as a quiet toolbar */}
         {!isHome && (
@@ -129,9 +151,9 @@ export function Header() {
         <button
           type="button"
           onClick={toggleAssistant}
-          className="hidden h-8 items-center gap-2 rounded-lg border border-border/80 bg-background px-3 text-sm text-muted-foreground transition-colors hover:border-primary/35 hover:text-foreground sm:flex"
+          className="group/copilot hidden h-8 items-center gap-2 rounded-lg border border-border/80 bg-background px-3 text-sm text-muted-foreground transition-colors hover:border-primary/35 hover:text-foreground sm:flex"
         >
-          <Sparkles className="size-3.5 text-primary" />
+          <SparklesIcon size={14} className="text-primary [&>svg]:block" />
           <span className="text-[12.5px]">Pregúntale al copiloto…</span>
           <kbd className="rounded border border-border bg-muted/80 px-1.5 py-px text-[10px] font-medium text-muted-foreground">
             ⌘K
@@ -146,7 +168,7 @@ export function Header() {
               className="relative"
               aria-label="Notificaciones"
             >
-              <Bell className="size-4" />
+              <BellIcon size={16} className="[&>svg]:block" />
               <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-primary" />
             </Button>
           </DropdownMenuTrigger>
@@ -218,13 +240,5 @@ export function Header() {
         </DropdownMenu>
       </div>
     </header>
-  )
-}
-
-function LinkLogoMobile() {
-  return (
-    <span className="lg:hidden">
-      <Logo markClassName="size-7 text-sm" />
-    </span>
   )
 }

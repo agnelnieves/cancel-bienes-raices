@@ -10,7 +10,6 @@ import {
   Play,
   Plus,
   ShieldCheck,
-  Sparkles,
   TriangleAlert,
 } from "lucide-react"
 import { toast } from "sonner"
@@ -37,6 +36,7 @@ import {
   cn,
 } from "@cancel/ui"
 
+import { SparklesIcon } from "@/components/icons"
 import { useCreditStore } from "@/lib/stores/credit"
 
 const MAX_UTIL = 30 // % máximo saludable por tarjeta
@@ -238,10 +238,10 @@ export default function CreditoPage() {
 
         {/* ------------------------------ Plan de jugada ------------------------------ */}
         <div className="space-y-4 lg:col-span-2">
-          <Card className="border-primary/25 bg-gradient-to-br from-primary/6 to-transparent shadow-card">
+          <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-sm">
-                <Sparkles className="size-4 text-primary" />
+                <SparklesIcon size={16} className="text-primary [&>svg]:block" />
                 Plan de jugada
               </CardTitle>
             </CardHeader>

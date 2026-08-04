@@ -206,7 +206,7 @@ export default function CalculadoraPage() {
     <div className="space-y-5 animate-fade-in">
       {/* Banner de prefill */}
       {prefill?.address && (
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-primary/25 bg-primary/5 px-4 py-3">
+        <div className="flex items-center justify-between gap-3 rounded-2xl bg-muted px-4 py-3">
           <div className="flex items-center gap-2.5 text-sm">
             <BadgeCheck className="size-4 shrink-0 text-primary" />
             <span className="truncate">
@@ -343,22 +343,15 @@ export default function CalculadoraPage() {
         {/* ------------------------------ RESULTADOS ------------------------------ */}
         <div className="space-y-4 lg:col-span-3">
           {/* Veredicto en lenguaje sencillo — lo primero que ve el usuario */}
-          <Card
-            className={cn(
-              "border-2",
-              verdict.tone === "great" && "border-success/40 bg-gradient-to-br from-success/10 to-transparent",
-              verdict.tone === "ok" && "border-warning/40 bg-gradient-to-br from-warning/8 to-transparent",
-              verdict.tone === "bad" && "border-destructive/30 bg-gradient-to-br from-destructive/6 to-transparent"
-            )}
-          >
+          <Card>
             <CardContent className="p-5">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
                   <span
                     className={cn(
-                      "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold tracking-wide",
-                      verdict.tone === "great" && "bg-success-soft text-success",
-                      verdict.tone === "ok" && "bg-warning-soft text-warning",
+                      "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide",
+                      verdict.tone === "great" && "bg-accent text-accent-foreground",
+                      verdict.tone === "ok" && "bg-muted text-foreground",
                       verdict.tone === "bad" && "bg-destructive/10 text-destructive"
                     )}
                   >
@@ -403,13 +396,13 @@ export default function CalculadoraPage() {
                 </div>
               </div>
 
-              {/* Callout educativo — enseña la sensibilidad del deal (Zillow) */}
+              {/* Callout educativo — quiet muted surface, primary accent only */}
               {sensitivity !== null && sensitivity > 0 && (
-                <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-info/25 bg-info-soft/70 px-3.5 py-2.5">
-                  <Lightbulb className="mt-0.5 size-4 shrink-0 text-info" aria-hidden />
-                  <p className="text-[12.5px] leading-snug text-foreground/85">
-                    Si bajas el precio <strong>$10,000</strong>, tu cash flow sube{" "}
-                    <strong className="text-info">
+                <div className="mt-4 flex items-start gap-2.5 rounded-xl bg-muted/80 px-3.5 py-2.5">
+                  <Lightbulb className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+                  <p className="text-[12.5px] leading-snug text-muted-foreground">
+                    Si bajas el precio <strong className="text-foreground">$10,000</strong>, tu cash flow sube{" "}
+                    <strong className="text-foreground">
                       ~{formatCurrency(sensitivity)}/mes
                     </strong>
                     . Negociar el precio es la palanca más poderosa que tienes.

@@ -51,18 +51,18 @@ function PropertyImage({ p, saved }: { p: Property; saved: boolean }) {
       {/* Badges overlaid — top-left: lo urgente */}
       <div className="absolute top-2.5 left-2.5 flex flex-col items-start gap-1.5">
         {isCash && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-cash px-2.5 py-1 text-[10px] font-bold text-cash-foreground shadow-soft">
+          <span className="inline-flex items-center gap-1 rounded-full bg-background/95 px-2.5 py-1 text-[10px] font-semibold text-cash shadow-soft backdrop-blur-sm">
             Cash deal · Exclusivo
           </span>
         )}
         {drop !== null && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-success px-2.5 py-1 text-[10px] font-bold text-success-foreground shadow-soft">
-            <TrendingDown className="size-3" />
+          <span className="inline-flex items-center gap-1 rounded-full bg-background/95 px-2.5 py-1 text-[10px] font-semibold text-foreground shadow-soft backdrop-blur-sm">
+            <TrendingDown className="size-3 text-primary" />
             Bajó {drop}%
           </span>
         )}
         {isActive && !drop && p.daysOnMarket <= 7 && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-info px-2.5 py-1 text-[10px] font-bold text-info-foreground shadow-soft">
+          <span className="inline-flex items-center gap-1 rounded-full bg-background/95 px-2.5 py-1 text-[10px] font-semibold text-foreground shadow-soft backdrop-blur-sm">
             Recién listada
           </span>
         )}
@@ -152,8 +152,8 @@ export function PropertyCard({ property: p }: { property: Property }) {
         <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
           <SourceChip source={p.source} verified={p.verified} />
           {isActive && (
-            <span className="inline-flex items-center gap-1 rounded-full border border-info/30 bg-info-soft px-2 py-0.5 text-[10px] font-semibold text-info">
-              <span className="size-1.5 rounded-full bg-info animate-pulse-dot" aria-hidden />
+            <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+              <span className="size-1.5 rounded-full bg-primary animate-pulse-dot" aria-hidden />
               En venta · {p.daysOnMarket}d
             </span>
           )}

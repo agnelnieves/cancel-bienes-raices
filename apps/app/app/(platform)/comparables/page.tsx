@@ -436,7 +436,7 @@ function ComparablesInner() {
       {/* ── Layer 2: floating results list ────────────────────────────── */}
       <div
         className={cn(
-          "absolute z-10 flex flex-col overflow-hidden rounded-2xl border border-border/80 bg-background/95 shadow-lift backdrop-blur-xl transition-all duration-200",
+          "absolute z-10 flex flex-col overflow-hidden rounded-2xl border border-border bg-background/98 shadow-lift backdrop-blur-xl transition-all duration-200",
           // Desktop: left panel under filters
           "lg:top-[4.25rem] lg:bottom-3 lg:left-3 lg:w-[min(400px,calc(100%-1.5rem))]",
           listOpen ? "lg:opacity-100 lg:translate-x-0" : "lg:pointer-events-none lg:opacity-0 lg:-translate-x-2",
@@ -454,7 +454,7 @@ function ComparablesInner() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar dirección o pueblo…"
-              className="h-9 rounded-full border-border/80 bg-muted/40 pl-9 text-[13px]"
+              className="h-9 rounded-full border-border bg-background pl-9 text-[13px]"
             />
             {query && (
               <button

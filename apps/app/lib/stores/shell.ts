@@ -20,6 +20,7 @@ export const useShellStore = create<ShellState>()(
   )
 )
 
-/** Expanded / collapsed desktop widths — keep in sync with sidebar + app-shell */
+/** Expanded / collapsed desktop widths — keep in sync with sidebar + app-shell.
+ *  Inset shell: outer canvas is bg-sidebar; main panel floats beside the nav. */
 export const SIDEBAR_WIDTH = 232
-export const SIDEBAR_WIDTH_COLLAPSED = 64
+export const SIDEBAR_WIDTH_COLLAPSED = 48

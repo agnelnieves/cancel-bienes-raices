@@ -8,7 +8,6 @@ import {
   Calculator,
   Plus,
   Search,
-  Sparkles,
   TrendingDown,
   TrendingUp,
 } from "lucide-react"
@@ -29,6 +28,7 @@ import {
 import { Button, cn } from "@cancel/ui"
 
 import { Sparkline } from "@/components/charts"
+import { SparklesIcon } from "@/components/icons"
 import { SourceChip } from "@/components/source-chip"
 import { useAssistantStore } from "@/lib/stores/assistant"
 import { usePipelineStore } from "@/lib/stores/pipeline"
@@ -243,10 +243,10 @@ export default function DashboardPage() {
           <button
             type="button"
             onClick={() => openAssistant(true)}
-            className="group flex flex-1 items-start gap-3 rounded-xl bg-primary/[0.06] px-4 py-3.5 text-left ring-1 ring-primary/15 outline-none transition-colors hover:bg-primary/[0.1] hover:ring-primary/25 focus-visible:ring-2 focus-visible:ring-ring/40"
+            className="group flex flex-1 items-start gap-3 rounded-2xl bg-muted px-4 py-3.5 text-left outline-none transition-colors hover:bg-muted/80 focus-visible:ring-2 focus-visible:ring-ring/40"
           >
-            <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/12">
-              <Sparkles className="size-3.5 text-primary" />
+            <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl bg-background text-primary shadow-sm">
+              <SparklesIcon size={14} className="[&>svg]:block" />
             </span>
             <span className="min-w-0">
               <span className="block text-[13px] font-semibold">
@@ -395,9 +395,9 @@ export default function DashboardPage() {
                       {kind === "cash" ? (
                         <SourceChip source="cash" verified={p.verified} />
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-info-soft px-2 py-0.5 text-[10px] font-semibold text-info">
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
                           <span
-                            className="size-1.5 rounded-full bg-info animate-pulse-dot"
+                            className="size-1.5 rounded-full bg-primary animate-pulse-dot"
                             aria-hidden
                           />
                           Recién listada · {p.daysOnMarket}d
@@ -419,10 +419,8 @@ export default function DashboardPage() {
                   </div>
                   <ArrowUpRight
                     className={cn(
-                      "size-4 shrink-0 text-muted-foreground/40 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5",
-                      kind === "cash"
-                        ? "group-hover:text-cash"
-                        : "group-hover:text-info"
+                      "size-4 shrink-0 text-muted-foreground/40 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-foreground",
+                      kind === "cash" && "group-hover:text-cash"
                     )}
                   />
                 </button>

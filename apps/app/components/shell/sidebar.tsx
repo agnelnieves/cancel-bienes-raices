@@ -1,21 +1,9 @@
 "use client"
 
+import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import {
-  Building2,
-  Calculator,
-  GitCompareArrows,
-  HardHat,
-  Home,
-  KanbanSquare,
-  Landmark,
-  PanelLeftClose,
-  PanelLeftOpen,
-  Ruler,
-  Search,
-  Users,
-} from "lucide-react"
+import { Building2 } from "lucide-react"
 
 import {
   Tooltip,
@@ -25,6 +13,17 @@ import {
   cn,
 } from "@cancel/ui"
 
+import {
+  ChartColumnIncreasingIcon,
+  ConstructionIcon,
+  CreditCardIcon,
+  FolderKanbanIcon,
+  GitCompareArrowsIcon,
+  HammerIcon,
+  HomeIcon,
+  SearchIcon,
+  UsersIcon,
+} from "@/components/icons"
 import { useSavedStore } from "@/lib/stores/saved"
 import { usePipelineStore } from "@/lib/stores/pipeline"
 import {
@@ -34,10 +33,23 @@ import {
 } from "@/lib/stores/shell"
 import { Logo } from "./logo"
 
+type IconHandle = {
+  startAnimation: () => void
+  stopAnimation: () => void
+}
+
+type AnimatedIcon = React.ForwardRefExoticComponent<
+  {
+    size?: number
+    className?: string
+  } & React.RefAttributes<IconHandle> &
+    React.HTMLAttributes<HTMLDivElement>
+>
+
 interface NavItem {
   href: string
   label: string
-  icon: React.ElementType
+  icon: AnimatedIcon
   exact?: boolean
   badge?: "deals" | "compare"
 }
@@ -46,10 +58,14 @@ const sections: { label: string; items: NavItem[] }[] = [
   {
     label: "Analizar",
     items: [
-      { href: "/", label: "Inicio", icon: Home, exact: true },
-      { href: "/comparables", label: "Comparables", icon: Search },
-      { href: "/calculadora", label: "Calculadora ROI", icon: Calculator },
-      { href: "/estimador", label: "Estimador", icon: Ruler },
+      { href: "/", label: "Inicio", icon: HomeIcon, exact: true },
+      { href: "/comparables", label: "Comparables", icon: SearchIcon },
+      {
+        href: "/calculadora",
+        label: "Calculadora ROI",
+        icon: ChartColumnIncreasingIcon,
+      },
+      { href: "/estimador", label: "Estimador", icon: HammerIcon },
     ],
   },
   {
@@ -58,32 +74,102 @@ const sections: { label: string; items: NavItem[] }[] = [
       {
         href: "/deals",
         label: "Deal Tracker",
-        icon: KanbanSquare,
+        icon: FolderKanbanIcon,
         badge: "deals",
       },
       {
         href: "/comparador",
         label: "Comparador",
-        icon: GitCompareArrows,
+        icon: GitCompareArrowsIcon,
         badge: "compare",
       },
-      { href: "/credito", label: "Crédito", icon: Landmark },
+      { href: "/credito", label: "Crédito", icon: CreditCardIcon },
     ],
   },
   {
     label: "Red verificada",
-    items: [{ href: "/contratistas", label: "Contratistas", icon: HardHat }],
+    items: [
+      { href: "/contratistas", label: "Contratistas", icon: ConstructionIcon },
+    ],
   },
   {
     label: "Comunidad",
-    items: [{ href: "/comunidad", label: "Comunidad", icon: Users }],
+    items: [{ href: "/comunidad", label: "Comunidad", icon: UsersIcon }],
   },
 ]
 
+function NavLink({
+  item,
+  active,
+  badge,
+  collapsed,
+}: {
+  item: NavItem
+  active: boolean
+  badge: number | null
+  collapsed: boolean
+}) {
+  const iconRef = React.useRef<IconHandle>(null)
+  const Icon = item.icon
+
+  return (
+    <Link
+      href={item.href}
+      aria-label={item.label}
+      aria-current={active ? "page" : undefined}
+      onMouseEnter={() => iconRef.current?.startAnimation()}
+      onMouseLeave={() => iconRef.current?.stopAnimation()}
+      className={cn(
+        "group relative flex items-center rounded-lg text-[13px] font-medium transition-[background-color,box-shadow,color] duration-150 outline-none",
+        "focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+        collapsed ? "size-9 justify-center" : "gap-2.5 px-2.5 py-[7px]",
+        active
+          ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
+          : "text-muted-foreground hover:bg-black/[0.04] hover:text-sidebar-foreground dark:hover:bg-white/[0.05]"
+      )}
+    >
+      <Icon
+        ref={iconRef}
+        size={15}
+        className={cn(
+          "shrink-0 [&>svg]:block",
+          active
+            ? "text-primary"
+            : "text-muted-foreground/70 group-hover:text-sidebar-foreground"
+        )}
+      />
+      {!collapsed && (
+        <>
+          <span className="flex-1 truncate">{item.label}</span>
+          {badge !== null && (
+            <span
+              className={cn(
+                "flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-semibold tabular-nums",
+                active
+                  ? "bg-muted text-foreground"
+                  : "bg-black/[0.05] text-muted-foreground dark:bg-white/10"
+              )}
+            >
+              {badge}
+            </span>
+          )}
+        </>
+      )}
+      {collapsed && badge !== null && (
+        <span className="absolute top-1.5 right-1.5 flex size-1.5 rounded-full bg-primary" />
+      )}
+    </Link>
+  )
+}
+
+/**
+ * Desktop sidebar — inset variant (shadcn sidebar-08).
+ * Sits on the warm `bg-sidebar` canvas; the main panel floats beside it.
+ * Collapses to icon rail via shell store (persisted).
+ */
 export function Sidebar() {
   const pathname = usePathname()
   const collapsed = useShellStore((s) => s.sidebarCollapsed)
-  const toggleSidebar = useShellStore((s) => s.toggleSidebar)
   const compareCount = useSavedStore((s) => s.compareIds.length)
   const dealsCount = usePipelineStore(
     (s) => s.deals.filter((d) => d.stage !== "cierre").length
@@ -95,168 +181,146 @@ export function Sidebar() {
     return null
   }
 
-  const width = collapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH
+  // Expanded: gap = sidebar width (p-2 lives inside). Collapsed icon mode:
+  // gap/container grow by the horizontal padding so the rail stays comfortable.
+  const gapW = collapsed ? SIDEBAR_WIDTH_COLLAPSED + 16 : SIDEBAR_WIDTH
+  const containerW = collapsed ? SIDEBAR_WIDTH_COLLAPSED + 16 : SIDEBAR_WIDTH
 
   return (
     <TooltipProvider delayDuration={0}>
-      <aside
-        className="fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-200 ease-out lg:flex"
-        style={{ width }}
+      {/* Layout spacer — reserves space next to the floating inset panel */}
+      <div
+        data-slot="sidebar-gap"
+        className="hidden shrink-0 transition-[width] duration-200 ease-out lg:block"
+        style={{ width: gapW }}
+        aria-hidden
+      />
+
+      {/* Fixed sidebar on the canvas */}
+      <div
+        data-slot="sidebar-container"
         data-collapsed={collapsed || undefined}
+        className="fixed inset-y-0 left-0 z-30 hidden h-svh p-2 transition-[width] duration-200 ease-out lg:flex"
+        style={{ width: containerW }}
       >
-        <div
-          className={cn(
-            "flex h-14 shrink-0 items-center",
-            collapsed ? "justify-center px-2" : "px-4"
-          )}
+        <aside
+          data-slot="sidebar-inner"
+          className="flex size-full flex-col text-sidebar-foreground"
         >
-          <Link href="/" aria-label="Inicio" className="outline-none">
-            {collapsed ? (
-              <span className="flex size-8 items-center justify-center rounded-[10px] bg-primary font-heading text-[15px] font-extrabold tracking-tight text-primary-foreground">
-                C
-              </span>
-            ) : (
-              <Logo />
-            )}
-          </Link>
-        </div>
-
-        <nav
-          className={cn(
-            "flex-1 overflow-y-auto overflow-x-hidden py-1",
-            collapsed ? "px-2 space-y-1" : "space-y-5 px-2.5"
-          )}
-        >
-          {sections.map((section) => (
-            <div key={section.label}>
-              {!collapsed && (
-                <p className="mb-1 px-2.5 text-[10px] font-medium tracking-[0.08em] text-muted-foreground/80 uppercase">
-                  {section.label}
-                </p>
-              )}
-              {collapsed && section !== sections[0] && (
-                <div className="mx-auto my-2 h-px w-6 bg-sidebar-border" />
-              )}
-              <div className="space-y-px">
-                {section.items.map((item) => {
-                  const active = item.exact
-                    ? pathname === item.href
-                    : pathname.startsWith(item.href)
-                  const badge = badgeValue(item.badge)
-
-                  const link = (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      aria-label={item.label}
-                      className={cn(
-                        "group relative flex items-center rounded-lg text-[13px] font-medium transition-colors",
-                        collapsed
-                          ? "size-10 justify-center mx-auto"
-                          : "gap-2.5 px-2.5 py-[7px]",
-                        active
-                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                          : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-                      )}
-                    >
-                      <item.icon
-                        className={cn(
-                          "size-[15px] shrink-0",
-                          active
-                            ? "text-primary"
-                            : "text-muted-foreground/65 group-hover:text-foreground"
-                        )}
-                      />
-                      {!collapsed && (
-                        <>
-                          <span className="flex-1 truncate">{item.label}</span>
-                          {badge !== null && (
-                            <span
-                              className={cn(
-                                "flex h-5 min-w-5 items-center justify-center rounded-md px-1.5 text-[10px] font-semibold tabular-nums",
-                                active
-                                  ? "bg-primary/15 text-primary"
-                                  : "bg-muted text-muted-foreground"
-                              )}
-                            >
-                              {badge}
-                            </span>
-                          )}
-                        </>
-                      )}
-                      {collapsed && badge !== null && (
-                        <span className="absolute top-1.5 right-1.5 flex size-1.5 rounded-full bg-primary" />
-                      )}
-                    </Link>
-                  )
-
-                  if (!collapsed) return link
-
-                  return (
-                    <Tooltip key={item.href}>
-                      <TooltipTrigger asChild>{link}</TooltipTrigger>
-                      <TooltipContent side="right" sideOffset={8}>
-                        {item.label}
-                        {badge !== null ? ` (${badge})` : ""}
-                      </TooltipContent>
-                    </Tooltip>
-                  )
-                })}
-              </div>
-            </div>
-          ))}
-        </nav>
-
-        <div
-          className={cn(
-            "shrink-0 border-t border-sidebar-border",
-            collapsed ? "p-2" : "p-3"
-          )}
-        >
-          {!collapsed && (
-            <div className="mb-2 rounded-lg bg-sidebar-accent/50 px-3 py-2.5">
-              <div className="flex items-center gap-1.5">
-                <Building2 className="size-3 text-primary" />
-                <p className="text-[11px] font-semibold">Data exclusiva</p>
-              </div>
-              <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
-                23 cash deals reportados este mes por la red de realtors.
-              </p>
-            </div>
-          )}
-
-          <button
-            type="button"
-            onClick={toggleSidebar}
-            aria-label={collapsed ? "Expandir menú" : "Colapsar menú"}
+          {/* Header — brand */}
+          <div
             className={cn(
-              "flex w-full items-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground",
-              collapsed
-                ? "size-10 mx-auto justify-center"
-                : "gap-2.5 px-2.5 py-2 text-[12px] font-medium"
+              "flex h-12 shrink-0 items-center",
+              collapsed ? "justify-center px-0" : "px-2"
             )}
           >
-            {collapsed ? (
-              <PanelLeftOpen className="size-4" />
-            ) : (
-              <>
-                <PanelLeftClose className="size-4 shrink-0" />
-                <span>Colapsar</span>
-              </>
+            <Link href="/" aria-label="Inicio" className="outline-none">
+              {collapsed ? (
+                <span className="flex size-8 items-center justify-center rounded-lg bg-sidebar-primary font-heading text-[15px] font-extrabold tracking-tight text-sidebar-primary-foreground">
+                  C
+                </span>
+              ) : (
+                <Logo />
+              )}
+            </Link>
+          </div>
+
+          {/* Content — nav groups */}
+          <nav
+            className={cn(
+              "flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden py-1",
+              collapsed ? "items-center gap-1 px-0" : "gap-5 px-1"
             )}
-          </button>
-        </div>
-      </aside>
+          >
+            {sections.map((section) => (
+              <div
+                key={section.label}
+                className={cn(
+                  "flex flex-col",
+                  collapsed ? "w-full items-center gap-1" : "gap-1"
+                )}
+              >
+                {!collapsed && (
+                  <p className="mb-0.5 px-2.5 text-[10px] font-medium tracking-[0.08em] text-muted-foreground/80 uppercase">
+                    {section.label}
+                  </p>
+                )}
+                {collapsed && section !== sections[0] && (
+                  <div className="mx-auto my-1 h-px w-6 bg-sidebar-border" />
+                )}
+                <ul
+                  className={cn(
+                    "flex flex-col",
+                    collapsed ? "w-full items-center gap-1" : "gap-px"
+                  )}
+                >
+                  {section.items.map((item) => {
+                    const active = item.exact
+                      ? pathname === item.href
+                      : pathname.startsWith(item.href)
+                    const badge = badgeValue(item.badge)
+
+                    const link = (
+                      <NavLink
+                        item={item}
+                        active={active}
+                        badge={badge}
+                        collapsed={collapsed}
+                      />
+                    )
+
+                    return (
+                      <li key={item.href} className={collapsed ? "" : "w-full"}>
+                        {collapsed ? (
+                          <Tooltip>
+                            <TooltipTrigger asChild>{link}</TooltipTrigger>
+                            <TooltipContent side="right" sideOffset={10}>
+                              {item.label}
+                              {badge !== null ? ` (${badge})` : ""}
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          link
+                        )}
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+            ))}
+          </nav>
+
+          {/* Footer — exclusive data blurb when expanded */}
+          {!collapsed && (
+            <div className="shrink-0 p-2 pt-1">
+              <div className="rounded-xl bg-sidebar-accent/80 px-3 py-2.5 shadow-sm">
+                <div className="flex items-center gap-1.5">
+                  <Building2 className="size-3 text-primary" />
+                  <p className="text-[11px] font-semibold">Data exclusiva</p>
+                </div>
+                <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
+                  23 cash deals reportados este mes por la red de realtors.
+                </p>
+              </div>
+            </div>
+          )}
+        </aside>
+      </div>
     </TooltipProvider>
   )
 }
 
-const mobileItems = [
-  { href: "/", label: "Inicio", icon: Home, exact: true },
-  { href: "/comparables", label: "Comparables", icon: Search },
-  { href: "/deals", label: "Deals", icon: KanbanSquare },
-  { href: "/contratistas", label: "Contratistas", icon: HardHat },
-  { href: "/comunidad", label: "Comunidad", icon: Users },
+const mobileItems: {
+  href: string
+  label: string
+  icon: AnimatedIcon
+  exact?: boolean
+}[] = [
+  { href: "/", label: "Inicio", icon: HomeIcon, exact: true },
+  { href: "/comparables", label: "Comparables", icon: SearchIcon },
+  { href: "/deals", label: "Deals", icon: FolderKanbanIcon },
+  { href: "/contratistas", label: "Contratistas", icon: ConstructionIcon },
+  { href: "/comunidad", label: "Comunidad", icon: UsersIcon },
 ]
 
 export function MobileNav() {
@@ -268,6 +332,7 @@ export function MobileNav() {
           const active = item.exact
             ? pathname === item.href
             : pathname.startsWith(item.href)
+          const Icon = item.icon
           return (
             <Link
               key={item.href}
@@ -277,7 +342,7 @@ export function MobileNav() {
                 active ? "text-primary" : "text-muted-foreground"
               )}
             >
-              <item.icon className="size-5" />
+              <Icon size={20} className="[&>svg]:block" />
               {item.label}
             </Link>
           )

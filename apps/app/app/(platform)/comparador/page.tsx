@@ -2,15 +2,9 @@
 
 import * as React from "react"
 import Link from "next/link"
-import {
-  CircleHelp,
-  Plus,
-  Search,
-  Scale,
-  Sparkles,
-  Trophy,
-  X,
-} from "lucide-react"
+import { CircleHelp, Plus, Trophy, X } from "lucide-react"
+
+import { GitCompareIcon, SearchIcon, SparklesIcon } from "@/components/icons"
 
 import {
   formatCompact,
@@ -378,8 +372,8 @@ function EmptyState() {
   return (
     <Card className="border-dashed shadow-card">
       <CardContent className="flex flex-col items-center gap-4 py-16 text-center sm:py-20">
-        <div className="flex size-14 items-center justify-center rounded-2xl bg-success-soft">
-          <Scale className="size-6 text-success" />
+        <div className="flex size-14 items-center justify-center rounded-2xl bg-success-soft text-success">
+          <GitCompareIcon size={26} className="[&>svg]:block" />
         </div>
         <div>
           <h3 className="font-heading text-lg font-bold">Pon dos o más propiedades cara a cara</h3>
@@ -411,8 +405,8 @@ function EmptyState() {
         </div>
 
         <Button asChild className="mt-1">
-          <Link href="/comparables">
-            <Search className="size-4" />
+          <Link href="/comparables" className="inline-flex items-center gap-2">
+            <SearchIcon size={16} className="[&>svg]:block" />
             Buscar comparables
           </Link>
         </Button>
@@ -444,7 +438,7 @@ function AddPropertyDialog({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="size-4 text-primary" />
+            <SparklesIcon size={16} className="text-primary [&>svg]:block" />
             Añadir al comparador
           </DialogTitle>
         </DialogHeader>

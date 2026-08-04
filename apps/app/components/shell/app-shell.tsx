@@ -3,6 +3,8 @@
 import * as React from "react"
 import { usePathname, useRouter } from "next/navigation"
 
+import { cn } from "@cancel/ui"
+
 import { Assistant } from "@/components/assistant/assistant"
 import { useHydrated } from "@/lib/use-hydrated"
 import {
@@ -18,18 +20,36 @@ import { MobileNav, Sidebar } from "./sidebar"
 /** Routes that own the full content canvas (map tools, etc.) */
 const FULL_BLEED = new Set(["/comparables"])
 
+/**
+ * Inset app shell — same pattern as shadcn sidebar-08:
+ * outer canvas is `bg-sidebar`, desktop nav sits inset on the left,
+ * and the main surface is a floating rounded panel (`SidebarInset`).
+ */
 export function AppShell({ children }: { children: React.ReactNode }) {
   const hydrated = useHydrated()
   const onboarded = useUserStore((s) => s.profile.onboarded)
   const pathname = usePathname()
   const router = useRouter()
   const collapsed = useShellStore((s) => s.sidebarCollapsed)
+  const toggleSidebar = useShellStore((s) => s.toggleSidebar)
   const fullBleed = FULL_BLEED.has(pathname)
   const sidebarW = collapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH
 
   React.useEffect(() => {
     if (hydrated && !onboarded) router.replace("/onboarding")
   }, [hydrated, onboarded, router, pathname])
+
+  // ⌘B / Ctrl+B — same shortcut as shadcn SidebarProvider
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "b" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        toggleSidebar()
+      }
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [toggleSidebar])
 
   if (!hydrated || !onboarded) {
     return (
@@ -47,27 +67,42 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-dvh bg-background">
+    <div
+      className="group/shell flex min-h-dvh w-full bg-background lg:bg-sidebar"
+      data-collapsed={collapsed || undefined}
+      style={
+        {
+          "--sidebar-w": `${sidebarW}px`,
+          "--sidebar-w-expanded": `${SIDEBAR_WIDTH}px`,
+          "--sidebar-w-icon": `${SIDEBAR_WIDTH_COLLAPSED}px`,
+        } as React.CSSProperties
+      }
+    >
       <Sidebar />
+
+      {/* SidebarInset — floating content panel on desktop */}
       <div
-        className="transition-[padding] duration-200 ease-out lg:pl-[var(--sidebar-w)]"
-        style={
-          {
-            "--sidebar-w": `${sidebarW}px`,
-          } as React.CSSProperties
-        }
+        className={cn(
+          "relative flex min-w-0 flex-1 flex-col bg-background",
+          "lg:m-2 lg:ml-0 lg:rounded-xl lg:shadow-inset-panel",
+          "transition-[margin] duration-200 ease-out",
+          fullBleed
+            ? "h-dvh max-h-dvh overflow-hidden lg:h-[calc(100dvh-1rem)] lg:max-h-[calc(100dvh-1rem)]"
+            : "min-h-dvh lg:min-h-[calc(100dvh-1rem)]"
+        )}
       >
         <Header />
         {fullBleed ? (
-          <main className="relative h-[calc(100dvh-3.5rem)] overflow-hidden pb-[env(safe-area-inset-bottom)] max-lg:pb-16">
+          <main className="relative min-h-0 flex-1 overflow-hidden max-lg:pb-16 lg:rounded-b-xl">
             {children}
           </main>
         ) : (
-          <main className="mx-auto w-full max-w-[1200px] px-4 pt-6 pb-24 sm:px-6 lg:px-8 lg:pb-12">
+          <main className="mx-auto w-full max-w-[1200px] flex-1 px-4 pt-6 pb-24 sm:px-6 lg:px-8 lg:pb-12">
             {children}
           </main>
         )}
       </div>
+
       <MobileNav />
       <Assistant />
     </div>

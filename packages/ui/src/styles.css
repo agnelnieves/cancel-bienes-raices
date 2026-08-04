@@ -3,86 +3,94 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Surface system (Airbnb-like calm):
+ * - One near-white family for bg / card / muted / secondary
+ * - Hairline borders, soft shadows — not competing fills
+ * - Primary (teal) is the only loud accent in the UI
+ * - Cash (terracotta) is rare + reserved for exclusive deals
+ * - Info/warning are quiet tint chips, not competing brand colors
+ */
 :root {
-  --background: #faf7f1; /* warm paper — más cálido que un gris SaaS */
-  --foreground: #232b26; /* warm charcoal */
-  --card: #fffdfa;
-  --card-foreground: #232b26;
-  --popover: #fffdfa;
-  --popover-foreground: #232b26;
+  --background: #ffffff;
+  --foreground: #222222;
+  --card: #ffffff;
+  --card-foreground: #222222;
+  --popover: #ffffff;
+  --popover-foreground: #222222;
   --primary: #1d9e75;
   --primary-foreground: #ffffff;
-  --secondary: #f1ece2;
-  --secondary-foreground: #1e2a22;
-  --muted: #f1ede4;
-  --muted-foreground: #5d6a60;
-  --accent: #e9f5f0;
+  /* Quiet warm grays — same family, tiny steps */
+  --secondary: #f4f2ed;
+  --secondary-foreground: #222222;
+  --muted: #f4f2ed;
+  --muted-foreground: #6a6a6a;
+  --accent: #eef7f3;
   --accent-foreground: #0c3f2d;
-  --destructive: #dc2626;
+  --destructive: #d93025;
   --destructive-foreground: #ffffff;
-  /* Hairline tenue — la separación la hace el shadow, no la línea (Attio quiet-luxury) */
-  --border: #eae4d6;
-  --input: #e6dfd2;
+  --border: #e4e2dc;
+  --input: #e4e2dc;
   --ring: #1d9e75;
-  /* Acentos semánticos (estados y momentos de marca) */
-  --cash: #c4593a; /* terracota — SOLO para cash deals exclusivos (sello) */
+  /* Semantic — desaturated so they don't fight primary */
+  --cash: #b85c42;
   --cash-foreground: #ffffff;
-  --cash-soft: #f6e6de; /* fondo suave para el sello/chip cash */
-  --info: #2563a8; /* "recién listada" / activo — azul calmado */
+  --cash-soft: #f8efe9;
+  --info: #4a6fa5;
   --info-foreground: #ffffff;
-  --info-soft: #e3edf7;
-  --warning: #b45309;
+  --info-soft: #eef2f7;
+  --warning: #9a6b2f;
   --warning-foreground: #ffffff;
-  --warning-soft: #fbeedd;
+  --warning-soft: #f7f1e8;
   --success: #1d9e75;
   --success-foreground: #ffffff;
-  --success-soft: #e9f5f0;
+  --success-soft: #eef7f3;
   --chart-1: #1d9e75;
   --chart-2: #7ac5aa;
   --chart-3: #b5ded0;
   --chart-4: #d9efe7;
   --chart-5: #8ca095;
   --radius: 0.75rem;
-  --sidebar: #f6f1e8;
-  --sidebar-foreground: #232b26;
+  /* Shell canvas — one step warmer than pure white, not a different "world" */
+  --sidebar: #f4f2ed;
+  --sidebar-foreground: #222222;
   --sidebar-primary: #1d9e75;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #e9f5f0;
-  --sidebar-accent-foreground: #0c3f2d;
-  --sidebar-border: #e6dfd2;
+  --sidebar-accent: #ffffff;
+  --sidebar-accent-foreground: #222222;
+  --sidebar-border: #e4e2dc;
   --sidebar-ring: #1d9e75;
 }
 
 .dark {
-  --background: #0a130f;
-  --foreground: #ecf4f0;
-  --card: #101c16;
-  --card-foreground: #ecf4f0;
-  --popover: #101c16;
-  --popover-foreground: #ecf4f0;
+  --background: #0e1411;
+  --foreground: #f2f5f3;
+  --card: #141b17;
+  --card-foreground: #f2f5f3;
+  --popover: #141b17;
+  --popover-foreground: #f2f5f3;
   --primary: #2fbc8e;
   --primary-foreground: #04241a;
-  --secondary: #1a2822;
-  --secondary-foreground: #e2ede8;
-  --muted: #16241d;
-  --muted-foreground: #8ca095;
+  --secondary: #1a221e;
+  --secondary-foreground: #e8eeea;
+  --muted: #1a221e;
+  --muted-foreground: #8b9a92;
   --accent: #143327;
   --accent-foreground: #a9e9cf;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --border: #1e2e26;
-  --input: #223129;
+  --border: #243028;
+  --input: #243028;
   --ring: #2fbc8e;
-  /* Acentos semánticos — dark */
-  --cash: #e0765a;
+  --cash: #d4846a;
   --cash-foreground: #2a0f06;
-  --cash-soft: #311a13;
-  --info: #5a94d1;
+  --cash-soft: #2a1a14;
+  --info: #7a9cc4;
   --info-foreground: #081826;
-  --info-soft: #152635;
-  --warning: #e0922f;
+  --info-soft: #15202a;
+  --warning: #c9a06a;
   --warning-foreground: #2a1c05;
-  --warning-soft: #2f2512;
+  --warning-soft: #2a2214;
   --success: #2fbc8e;
   --success-foreground: #04241a;
   --success-soft: #143327;
@@ -91,13 +99,13 @@
   --chart-3: #3d6e5f;
   --chart-4: #2a4f44;
   --chart-5: #6d7f77;
-  --sidebar: #0d1712;
-  --sidebar-foreground: #ecf4f0;
+  --sidebar: #0a0f0c;
+  --sidebar-foreground: #f2f5f3;
   --sidebar-primary: #2fbc8e;
   --sidebar-primary-foreground: #04241a;
-  --sidebar-accent: #143327;
-  --sidebar-accent-foreground: #a9e9cf;
-  --sidebar-border: #1e2e26;
+  --sidebar-accent: #141b17;
+  --sidebar-accent-foreground: #f2f5f3;
+  --sidebar-border: #1e2822;
   --sidebar-ring: #2fbc8e;
 }
 
@@ -229,40 +237,51 @@
     @apply bg-background text-foreground antialiased;
   }
   ::selection {
-    background: color-mix(in srgb, var(--primary) 22%, transparent);
+    background: color-mix(in srgb, var(--primary) 18%, transparent);
   }
 }
 
 @layer utilities {
+  /* Quiet elevation — hairline + whisper of shadow (Airbnb energy) */
   .shadow-card {
     box-shadow:
-      0 1px 2px rgb(16 31 26 / 0.05),
-      0 3px 12px -4px rgb(16 31 26 / 0.06);
+      0 0 0 1px rgb(34 34 34 / 0.06),
+      0 1px 2px rgb(34 34 34 / 0.04);
   }
   .shadow-soft {
     box-shadow:
-      0 1px 2px rgb(16 31 26 / 0.04),
-      0 6px 24px -8px rgb(16 31 26 / 0.08);
+      0 0 0 1px rgb(34 34 34 / 0.06),
+      0 2px 8px -2px rgb(34 34 34 / 0.08);
+  }
+  .shadow-inset-panel {
+    box-shadow:
+      0 0 0 1px rgb(34 34 34 / 0.06),
+      0 4px 16px -4px rgb(34 34 34 / 0.08);
   }
   .shadow-lift {
     box-shadow:
-      0 2px 4px rgb(16 31 26 / 0.05),
-      0 16px 40px -12px rgb(16 31 26 / 0.14);
+      0 0 0 1px rgb(34 34 34 / 0.06),
+      0 8px 24px -8px rgb(34 34 34 / 0.12);
   }
   .dark .shadow-card {
     box-shadow:
-      0 1px 2px rgb(0 0 0 / 0.4),
-      0 3px 12px -4px rgb(0 0 0 / 0.35);
+      0 0 0 1px rgb(255 255 255 / 0.06),
+      0 1px 2px rgb(0 0 0 / 0.35);
   }
   .dark .shadow-soft {
     box-shadow:
-      0 1px 2px rgb(0 0 0 / 0.45),
-      0 6px 24px -8px rgb(0 0 0 / 0.4);
+      0 0 0 1px rgb(255 255 255 / 0.06),
+      0 2px 8px -2px rgb(0 0 0 / 0.4);
+  }
+  .dark .shadow-inset-panel {
+    box-shadow:
+      0 0 0 1px rgb(255 255 255 / 0.06),
+      0 4px 16px -4px rgb(0 0 0 / 0.45);
   }
   .dark .shadow-lift {
     box-shadow:
-      0 2px 4px rgb(0 0 0 / 0.5),
-      0 16px 40px -12px rgb(0 0 0 / 0.55);
+      0 0 0 1px rgb(255 255 255 / 0.07),
+      0 8px 24px -8px rgb(0 0 0 / 0.5);
   }
   .text-balance {
     text-wrap: balance;

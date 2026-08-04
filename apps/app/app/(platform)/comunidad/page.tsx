@@ -10,6 +10,8 @@ import {
   SendHorizontal,
   ShieldCheck,
 } from "lucide-react"
+
+import { MessageCircleDashedIcon } from "@/components/icons"
 import { toast } from "sonner"
 
 import {
@@ -33,7 +35,7 @@ import { useUserStore } from "@/lib/stores/user"
 
 const roleStyle: Record<string, string> = {
   Fundador: "bg-primary/10 text-primary",
-  Pro: "bg-info-soft text-info",
+  Pro: "bg-muted text-muted-foreground",
   "Realtor verificado": "bg-success-soft text-success",
   Miembro: "bg-muted text-muted-foreground",
 }
@@ -303,8 +305,10 @@ export default function ComunidadPage() {
           ))}
 
           {visible.length === 0 && (
-            <div className="flex flex-col items-center gap-2 py-14 text-center">
-              <MessageCircle className="size-8 text-muted-foreground/50" />
+            <div className="flex flex-col items-center gap-3 py-14 text-center">
+              <div className="flex size-14 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+                <MessageCircleDashedIcon size={28} className="[&>svg]:block" />
+              </div>
               <p className="font-medium">Todavía no hay posts en #{activeChannel?.name}</p>
               <p className="max-w-sm text-sm text-muted-foreground">
                 Sé el primero — una pregunta buena aquí te ahorra miles en el
@@ -350,7 +354,7 @@ export default function ComunidadPage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="border-primary/20 bg-gradient-to-br from-primary/8 to-transparent shadow-card">
+        <Card>
           <CardContent className="p-4">
             <p className="text-xs font-semibold">Regla de la casa</p>
             <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">

@@ -15,6 +15,8 @@ import {
   ShieldCheck,
   Star,
 } from "lucide-react"
+
+import { ConstructionIcon } from "@/components/icons"
 import { toast } from "sonner"
 
 import {
@@ -219,8 +221,10 @@ function ContratistasInner() {
         </div>
       ) : (
         <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center gap-2 py-14 text-center">
-            <HardHat className="size-8 text-muted-foreground/50" />
+          <CardContent className="flex flex-col items-center gap-3 py-14 text-center">
+            <div className="flex size-14 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+              <ConstructionIcon size={28} className="[&>svg]:block" />
+            </div>
             <p className="font-medium">Nadie cubre esos filtros todavía</p>
             <p className="max-w-sm text-sm text-muted-foreground">
               La red crece cada semana. Prueba con otro oficio o municipio — o

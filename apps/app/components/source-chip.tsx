@@ -28,10 +28,10 @@ export function SourceChip({
         <span
           tabIndex={0}
           className={cn(
-            "inline-flex shrink-0 cursor-help items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+            "inline-flex shrink-0 cursor-help items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
             meta.exclusive
-              ? "border-cash/30 bg-cash-soft text-cash"
-              : "border-border bg-muted text-muted-foreground",
+              ? "border-cash/20 bg-cash-soft text-cash"
+              : "border-transparent bg-muted text-muted-foreground",
             className
           )}
         >

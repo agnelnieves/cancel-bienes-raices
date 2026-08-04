@@ -55,7 +55,7 @@ export function PropertyListItem({
       className={cn(
         "group w-full cursor-pointer border-b border-border/70 px-3.5 py-3 text-left outline-none transition-colors",
         "hover:bg-muted/45 focus-visible:bg-muted/45",
-        selected && "bg-primary/[0.07] hover:bg-primary/[0.09]"
+        selected && "bg-muted hover:bg-muted"
       )}
     >
       <div className="flex items-start justify-between gap-3">
@@ -121,9 +121,9 @@ export function PropertyListItem({
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
         <SourceChip source={p.source} verified={p.verified} />
         {isActive && (
-          <span className="inline-flex items-center gap-1 rounded-md bg-info-soft px-1.5 py-0.5 text-[10px] font-semibold text-info">
+          <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
             <span
-              className="size-1.5 rounded-full bg-info animate-pulse-dot"
+              className="size-1.5 rounded-full bg-primary animate-pulse-dot"
               aria-hidden
             />
             En venta · {p.daysOnMarket}d
