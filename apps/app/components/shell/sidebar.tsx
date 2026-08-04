@@ -8,7 +8,6 @@ import { Building2 } from "lucide-react"
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
   cn,
 } from "@cancel/ui"
@@ -98,40 +97,53 @@ const sections: { label: string; items: NavItem[] }[] = [
   },
 ]
 
-const NavLink = React.forwardRef<
-  HTMLAnchorElement,
-  {
-    item: NavItem
-    active: boolean
-    badge: number | null
-    collapsed: boolean
-  }
->(function NavLink({ item, active, badge, collapsed }, ref) {
+function NavLink({
+  item,
+  active,
+  badge,
+  collapsed,
+  className,
+  ...props
+}: {
+  item: NavItem
+  active: boolean
+  badge: number | null
+  collapsed: boolean
+} & Omit<React.ComponentPropsWithoutRef<typeof Link>, "href" | "children">) {
   const iconRef = React.useRef<IconHandle>(null)
   const Icon = item.icon
 
+  const { onMouseEnter, onMouseLeave, ...rest } = props
+
   return (
     <Link
-      ref={ref}
       href={item.href}
       aria-label={item.label}
       aria-current={active ? "page" : undefined}
-      onMouseEnter={() => iconRef.current?.startAnimation()}
-      onMouseLeave={() => iconRef.current?.stopAnimation()}
+      {...rest}
+      onMouseEnter={(e) => {
+        iconRef.current?.startAnimation()
+        onMouseEnter?.(e)
+      }}
+      onMouseLeave={(e) => {
+        iconRef.current?.stopAnimation()
+        onMouseLeave?.(e)
+      }}
       className={cn(
         "group relative flex items-center rounded-lg text-[13px] font-medium transition-[background-color,box-shadow,color] duration-150 outline-none",
         "focus-visible:ring-2 focus-visible:ring-sidebar-ring",
-        collapsed ? "size-9 justify-center" : "gap-2.5 px-2.5 py-[7px]",
+        collapsed ? "size-9 justify-center" : "w-full gap-2.5 px-2.5 py-[7px]",
         active
           ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
-          : "text-muted-foreground hover:bg-black/[0.04] hover:text-sidebar-foreground dark:hover:bg-white/[0.05]"
+          : "text-muted-foreground hover:bg-black/[0.04] hover:text-sidebar-foreground dark:hover:bg-white/[0.05]",
+        className
       )}
     >
       <Icon
         ref={iconRef}
         size={15}
         className={cn(
-          "shrink-0 [&>svg]:block",
+          "pointer-events-none shrink-0 [&>svg]:block",
           active
             ? "text-primary"
             : "text-muted-foreground/70 group-hover:text-sidebar-foreground"
@@ -159,7 +171,36 @@ const NavLink = React.forwardRef<
       )}
     </Link>
   )
-})
+}
+
+/** Collapsed rail item — span trigger is reliable with Radix + Next Link */
+function CollapsedNavItem({
+  item,
+  active,
+  badge,
+}: {
+  item: NavItem
+  active: boolean
+  badge: number | null
+}) {
+  return (
+    <Tooltip delayDuration={0}>
+      <TooltipTrigger asChild>
+        <span className="inline-flex">
+          <NavLink item={item} active={active} badge={badge} collapsed />
+        </span>
+      </TooltipTrigger>
+      <TooltipContent
+        side="right"
+        sideOffset={12}
+        className="z-[100] border-0 bg-foreground text-background shadow-soft"
+      >
+        {item.label}
+        {badge !== null ? ` (${badge})` : ""}
+      </TooltipContent>
+    </Tooltip>
+  )
+}
 
 /**
  * Desktop sidebar — inset variant (shadcn sidebar-08).
@@ -186,7 +227,7 @@ export function Sidebar() {
   const containerW = collapsed ? SIDEBAR_WIDTH_COLLAPSED + 16 : SIDEBAR_WIDTH
 
   return (
-    <TooltipProvider delayDuration={0}>
+    <>
       {/* Layout spacer — reserves space next to the floating inset panel */}
       <div
         data-slot="sidebar-gap"
@@ -227,8 +268,8 @@ export function Sidebar() {
           {/* Content — nav groups */}
           <nav
             className={cn(
-              "flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden py-1",
-              collapsed ? "items-center gap-1 px-0" : "gap-5 px-1"
+              "flex min-h-0 flex-1 flex-col overflow-y-auto py-1",
+              collapsed ? "items-center gap-1 overflow-x-visible px-0" : "gap-5 overflow-x-hidden px-1"
             )}
           >
             {sections.map((section) => (
@@ -259,27 +300,24 @@ export function Sidebar() {
                       : pathname.startsWith(item.href)
                     const badge = badgeValue(item.badge)
 
-                    const link = (
-                      <NavLink
-                        item={item}
-                        active={active}
-                        badge={badge}
-                        collapsed={collapsed}
-                      />
-                    )
-
                     return (
-                      <li key={item.href} className={collapsed ? "" : "w-full"}>
+                      <li
+                        key={item.href}
+                        className={collapsed ? "flex justify-center" : "w-full"}
+                      >
                         {collapsed ? (
-                          <Tooltip>
-                            <TooltipTrigger asChild>{link}</TooltipTrigger>
-                            <TooltipContent side="right" sideOffset={10}>
-                              {item.label}
-                              {badge !== null ? ` (${badge})` : ""}
-                            </TooltipContent>
-                          </Tooltip>
+                          <CollapsedNavItem
+                            item={item}
+                            active={active}
+                            badge={badge}
+                          />
                         ) : (
-                          link
+                          <NavLink
+                            item={item}
+                            active={active}
+                            badge={badge}
+                            collapsed={false}
+                          />
                         )}
                       </li>
                     )
@@ -305,7 +343,7 @@ export function Sidebar() {
           )}
         </aside>
       </div>
-    </TooltipProvider>
+    </>
   )
 }
 
