@@ -117,7 +117,7 @@ export default function ComunidadPage() {
   return (
     <div className="grid gap-5 lg:grid-cols-[200px_1fr] xl:grid-cols-[220px_1fr_240px] animate-fade-in">
       {/* Canales */}
-      <aside className="space-y-1 max-lg:flex max-lg:gap-1.5 max-lg:overflow-x-auto max-lg:pb-1">
+      <aside className="space-y-1 max-lg:flex max-lg:gap-1.5 max-lg:scroll-fade-x max-lg:overflow-x-auto max-lg:pb-1">
         {channels.map((c) => {
           const count = posts.filter((p) => p.channel === c.id).length
           return (

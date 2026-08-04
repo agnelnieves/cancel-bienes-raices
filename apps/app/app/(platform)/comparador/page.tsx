@@ -268,7 +268,7 @@ export default function ComparadorPage() {
       </Card>
 
       {/* Tabla comparativa */}
-      <div className="overflow-x-auto pb-2">
+      <div className="scroll-fade-x overflow-x-auto pb-2">
         <div
           className="grid min-w-max gap-3"
           style={{ gridTemplateColumns: `150px repeat(${Math.min(list.length + 1, MAX_COMPARE)}, minmax(200px, 1fr))` }}
@@ -449,7 +449,7 @@ function AddPropertyDialog({
           className="rounded-full"
           autoFocus
         />
-        <div className="max-h-80 space-y-1.5 overflow-y-auto">
+        <div className="max-h-80 space-y-1.5 scroll-fade-y overflow-y-auto">
           {results.map((p) => (
             <button
               key={p.id}

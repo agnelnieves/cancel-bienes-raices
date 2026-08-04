@@ -22,7 +22,6 @@ import {
   Plus,
   Sparkles,
   Trash2,
-  TrendingUp,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -59,18 +58,12 @@ import {
   cn,
 } from "@cancel/ui"
 
-import { PipelineAreaChart } from "@/components/charts"
+import { Sparkline } from "@/components/charts"
 import { usePipelineStore } from "@/lib/stores/pipeline"
 
-/** Demo series for the pipeline area chart — ends at current value */
-function buildPipelineSeries(currentValue: number) {
-  const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun"]
-  // Walk back ~6 months with gentle growth into today's pipeline
-  const factors = [0.52, 0.58, 0.64, 0.72, 0.85, 1]
-  return months.map((label, i) => ({
-    label,
-    value: Math.round(currentValue * factors[i]),
-  }))
+/** Tiny trend series for per-card sparklines — ends at `end` */
+function sparkSeries(end: number, factors: number[]) {
+  return factors.map((f) => Math.max(0, Math.round(end * f)))
 }
 
 /** Tier de ROI con variante de Badge + lectura en español llano */
@@ -138,78 +131,60 @@ export default function DealsPage() {
   const totalCashFlow = Math.round(
     deals.reduce((a, d) => a + d.cashFlow, 0)
   )
-  const chartData = React.useMemo(
-    () => buildPipelineSeries(pipelineValue || 1_200_000),
+
+  const pipelineSpark = React.useMemo(
+    () =>
+      sparkSeries(pipelineValue || 1_200_000, [
+        0.55, 0.58, 0.62, 0.68, 0.74, 0.81, 0.9, 0.95, 1,
+      ]),
     [pipelineValue]
   )
-  const prevValue = chartData[chartData.length - 2]?.value ?? pipelineValue
-  const deltaPct =
-    prevValue > 0
-      ? Math.round(((pipelineValue - prevValue) / prevValue) * 100)
-      : 0
+  const roiSpark = React.useMemo(
+    () =>
+      sparkSeries(Math.max(avgRoi, 1), [
+        0.72, 0.78, 0.75, 0.82, 0.88, 0.91, 0.94, 0.97, 1,
+      ]),
+    [avgRoi]
+  )
+  const cashSpark = React.useMemo(
+    () =>
+      sparkSeries(Math.max(totalCashFlow, 1000), [
+        0.48, 0.55, 0.6, 0.66, 0.72, 0.8, 0.86, 0.93, 1,
+      ]),
+    [totalCashFlow]
+  )
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Overview — compact metrics + shadcn-style area chart */}
-      <Card className="overflow-hidden">
-        <CardContent className="p-0">
-          <div className="grid divide-y divide-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-            <Metric
-              label="Valor del pipeline"
-              value={formatCompact(pipelineValue)}
-              hint={`${activeDeals.length} deals activos`}
-            />
-            <Metric
-              label="ROI promedio"
-              value={`${avgRoi.toFixed(1)}%`}
-              hint={
-                avgRoi >= 8
-                  ? "vs. 8% típico en PR"
-                  : "el típico en PR es ~8%"
-              }
-              accent={avgRoi >= 8}
-            />
-            <Metric
-              label="Cash flow potencial"
-              value={formatCurrency(totalCashFlow)}
-              hint="mensual combinado"
-            />
-          </div>
-
-          <div className="border-t border-border px-4 pt-3 pb-2 sm:px-5">
-            <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
-              <div>
-                <p className="text-[12px] font-medium text-foreground">
-                  Evolución del pipeline
-                </p>
-                <p className="text-[11px] text-muted-foreground">
-                  Valor agregado · últimos 6 meses
-                </p>
-              </div>
-              {deltaPct !== 0 && (
-                <span
-                  className={cn(
-                    "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium",
-                    deltaPct > 0
-                      ? "bg-accent text-accent-foreground"
-                      : "bg-muted text-muted-foreground"
-                  )}
-                >
-                  {deltaPct > 0 && <TrendingUp className="size-3" />}
-                  {deltaPct > 0 ? "+" : ""}
-                  {deltaPct}% este mes
-                </span>
-              )}
-            </div>
-            <div className="h-[160px] w-full sm:h-[180px]">
-              <PipelineAreaChart
-                data={chartData}
-                valueFormatter={(v) => formatCompact(v)}
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+    <div className="space-y-5 animate-fade-in">
+      {/* Stats — separate cards with tiny per-card sparklines */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <StatCard
+          id="pipeline"
+          label="Valor del pipeline"
+          value={formatCompact(pipelineValue)}
+          sub={`${activeDeals.length} deals activos`}
+          spark={pipelineSpark}
+        />
+        <StatCard
+          id="roi"
+          label="ROI promedio"
+          value={`${avgRoi.toFixed(1)}%`}
+          sub={
+            avgRoi >= 8
+              ? "vs. 8% típico en PR — vas bien"
+              : "el típico en PR es ~8%"
+          }
+          tone={avgRoi >= 8 ? "good" : "neutral"}
+          spark={roiSpark}
+        />
+        <StatCard
+          id="cashflow"
+          label="Cash flow potencial"
+          value={formatCurrency(totalCashFlow)}
+          sub="mensual combinado"
+          spark={cashSpark}
+        />
+      </div>
 
       <div className="flex items-center justify-between gap-3">
         <p className="text-[13px] text-muted-foreground">
@@ -223,7 +198,7 @@ export default function DealsPage() {
 
       {/* Kanban */}
       <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
-        <div className="flex gap-2.5 overflow-x-auto pb-4">
+        <div className="flex scroll-fade-x gap-2.5 overflow-x-auto pb-4">
           {dealStages.map((stage) => (
             <StageColumn
               key={stage.id}
@@ -574,31 +549,46 @@ function DealCard({
   )
 }
 
-/** Compact metric cell — Airbnb-scale, not a big KPI tile */
-function Metric({
+/** Compact KPI card with a tiny trend sparkline (like cash % / trend columns) */
+function StatCard({
+  id,
   label,
   value,
-  hint,
-  accent,
+  sub,
+  tone,
+  spark,
 }: {
+  id: string
   label: string
   value: string
-  hint: string
-  accent?: boolean
+  sub: string
+  tone?: "good" | "neutral"
+  spark: number[]
 }) {
   return (
-    <div className="px-4 py-3 sm:px-5 sm:py-3.5">
-      <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
-      <p
-        className={cn(
-          "mt-0.5 font-heading text-lg font-semibold tracking-tight tabular-nums sm:text-xl",
-          accent && "text-primary"
-        )}
-      >
-        {value}
-      </p>
-      <p className="mt-0.5 text-[10.5px] text-muted-foreground">{hint}</p>
-    </div>
+    <Card>
+      <CardContent className="p-3.5 sm:p-4">
+        <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
+        <div className="mt-1 flex items-end justify-between gap-3">
+          <div className="min-w-0">
+            <p
+              className={cn(
+                "font-heading text-xl font-semibold tracking-tight tabular-nums sm:text-[22px]",
+                tone === "good" && "text-primary"
+              )}
+            >
+              {value}
+            </p>
+            <p className="mt-0.5 text-[10.5px] text-muted-foreground">{sub}</p>
+          </div>
+          <Sparkline
+            id={id}
+            data={spark}
+            className="mb-0.5 h-9 w-[72px] shrink-0 sm:h-10 sm:w-20"
+          />
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 

@@ -279,7 +279,7 @@ function ComparablesInner() {
       {/* ── Layer 1: Airbnb-style filter bar ──────────────────────────── */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-20 p-3 sm:p-4">
         <div className="pointer-events-auto mx-auto flex max-w-full items-center gap-0 overflow-hidden rounded-full border border-border/80 bg-background/95 py-1.5 pr-1.5 pl-1.5 shadow-lift backdrop-blur-xl">
-          <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto no-scrollbar">
+          <div className="flex min-w-0 flex-1 items-center gap-1.5 scroll-fade-x overflow-x-auto no-scrollbar">
             {/* Filters button */}
             <button
               type="button"
@@ -493,7 +493,7 @@ function ComparablesInner() {
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div className="min-h-0 flex-1 scroll-fade-y overflow-y-auto overscroll-contain">
           {filtered.length > 0 ? (
             filtered.map((p) => (
               <div
@@ -566,7 +566,7 @@ function ComparablesInner() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 py-5">
+          <div className="min-h-0 flex-1 space-y-6 scroll-fade-y overflow-y-auto px-5 py-5">
             {/* Quick amenity-style source grid */}
             <section>
               <h3 className="mb-3 text-sm font-semibold">Fuente de data</h3>

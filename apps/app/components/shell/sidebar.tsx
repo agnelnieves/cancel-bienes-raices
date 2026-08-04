@@ -268,8 +268,10 @@ export function Sidebar() {
           {/* Content — nav groups */}
           <nav
             className={cn(
-              "flex min-h-0 flex-1 flex-col overflow-y-auto py-1",
-              collapsed ? "items-center gap-1 overflow-x-visible px-0" : "gap-5 overflow-x-hidden px-1"
+              "flex min-h-0 flex-1 flex-col scroll-fade-y overflow-y-auto py-1",
+              collapsed
+                ? "items-center gap-1 overflow-x-visible px-0"
+                : "gap-5 overflow-x-hidden px-1"
             )}
           >
             {sections.map((section) => (
