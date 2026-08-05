@@ -1,0 +1,26 @@
+# Dependencies & caches (never upload from CLI)
+node_modules
+**/node_modules
+.pnpm-store
+.turbo
+**/.turbo
+.next
+**/.next
+out
+dist
+build
+.cache
+
+# Local / tooling
+.vercel
+.git
+.env
+.env.*
+*.tsbuildinfo
+coverage
+.DS_Store
+
+# Heavy docs assets not needed for Next builds
+docs
+*.md
+!README.md

@@ -4,7 +4,8 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "env": ["VERCEL", "VERCEL_URL", "VERCEL_ENV"],
+      "outputs": [".next/**", "!.next/cache/**", ".vercel/output/**"]
     },
     "dev": {
       "cache": false,
