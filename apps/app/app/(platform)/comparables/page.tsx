@@ -80,7 +80,7 @@ function Chip({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-medium whitespace-nowrap transition-colors outline-none",
+        "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-medium whitespace-nowrap shadow-soft transition-colors outline-none",
         "focus-visible:ring-2 focus-visible:ring-ring/40",
         active
           ? "border-foreground bg-foreground text-background"
@@ -265,8 +265,8 @@ function ComparablesInner() {
         selectedId={selectedId}
         boundsPadding={
           listOpen
-            ? { top: 80, left: 420, right: 48, bottom: 48 }
-            : { top: 80, left: 48, right: 48, bottom: 48 }
+            ? { top: 56, left: 420, right: 48, bottom: 48 }
+            : { top: 56, left: 48, right: 48, bottom: 48 }
         }
         onSelect={(id) => {
           setSelectedId(id)
@@ -276,34 +276,61 @@ function ComparablesInner() {
         }}
       />
 
-      {/* ── Layer 1: Airbnb-style filter bar ──────────────────────────── */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-20 p-3 sm:p-4">
-        <div className="pointer-events-auto mx-auto flex max-w-full items-center gap-0 overflow-hidden rounded-full border border-border/80 bg-background/95 py-1.5 pr-1.5 pl-1.5 shadow-lift backdrop-blur-xl">
+      {/* ── Layer 1: filter chips (no chrome) — map area only ─────────── */}
+      <div
+        className={cn(
+          "pointer-events-none absolute inset-x-0 top-0 z-20 px-3 pt-3 sm:px-4 sm:pt-4 transition-[padding-left] duration-200",
+          // Desktop: chips sit in the map gutter to the right of the full-height list
+          // left-3 (0.75rem) + panel width + 0.5rem gap
+          listOpen &&
+            "lg:pl-[calc(0.75rem+min(400px,100%-1.5rem)+0.5rem)]"
+        )}
+      >
+        <div className="pointer-events-auto flex max-w-full items-center gap-1.5">
           <div className="flex min-w-0 flex-1 items-center gap-1.5 scroll-fade-x overflow-x-auto no-scrollbar">
-            {/* Filters button */}
+            {/* Desktop: list toggle at the start (where Filtros used to live) */}
             <button
               type="button"
-              onClick={openFiltersDialog}
-              className={cn(
-                "inline-flex h-9 shrink-0 items-center gap-2 rounded-full border px-3.5 text-[13px] font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
-                activeFilterCount > 0
-                  ? "border-foreground bg-background text-foreground"
-                  : "border-border bg-background text-foreground hover:border-foreground/40"
-              )}
+              onClick={() => setListOpen((v) => !v)}
+              className="hidden size-9 shrink-0 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-soft transition-colors hover:border-foreground/40 hover:text-foreground lg:flex"
+              aria-label={listOpen ? "Ocultar lista" : "Mostrar lista"}
             >
-              <SlidersHorizontal className="size-3.5" />
-              Filtros
-              {activeFilterCount > 0 && (
-                <span className="flex size-5 items-center justify-center rounded-full bg-foreground text-[11px] font-bold text-background">
-                  {activeFilterCount}
-                </span>
+              {listOpen ? (
+                <PanelLeftClose className="size-4" />
+              ) : (
+                <PanelLeftOpen className="size-4" />
               )}
             </button>
 
-            <span
-              className="mx-0.5 hidden h-5 w-px shrink-0 bg-border sm:block"
-              aria-hidden
-            />
+            {/* Mobile: list/map switcher */}
+            <div className="flex shrink-0 rounded-full border border-border bg-background p-0.5 shadow-soft lg:hidden">
+              <button
+                type="button"
+                onClick={() => setMobilePane("list")}
+                className={cn(
+                  "flex size-8 items-center justify-center rounded-full transition-colors",
+                  mobilePane === "list"
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground"
+                )}
+                aria-label="Vista lista"
+              >
+                <LayoutList className="size-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setMobilePane("map")}
+                className={cn(
+                  "flex size-8 items-center justify-center rounded-full transition-colors",
+                  mobilePane === "map"
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground"
+                )}
+                aria-label="Vista mapa"
+              >
+                <MapIcon className="size-3.5" />
+              </button>
+            </div>
 
             <Chip
               active={onlyExclusive || (sources.length === 1 && sources[0] === "cash")}
@@ -379,7 +406,7 @@ function ComparablesInner() {
               <button
                 type="button"
                 onClick={resetAll}
-                className="inline-flex h-9 shrink-0 items-center gap-1 rounded-full px-3 text-[12px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+                className="inline-flex h-9 shrink-0 items-center gap-1 rounded-full border border-border bg-background px-3 text-[12px] font-medium text-muted-foreground shadow-soft transition-colors hover:text-foreground"
               >
                 <RotateCcw className="size-3" />
                 Limpiar
@@ -387,60 +414,36 @@ function ComparablesInner() {
             )}
           </div>
 
-          {/* Mobile list/map + desktop list toggle */}
-          <div className="ml-1 flex shrink-0 items-center gap-1 border-l border-border pl-1.5">
-            <div className="flex rounded-full border border-border p-0.5 lg:hidden">
-              <button
-                type="button"
-                onClick={() => setMobilePane("list")}
-                className={cn(
-                  "flex size-8 items-center justify-center rounded-full transition-colors",
-                  mobilePane === "list"
-                    ? "bg-muted text-foreground"
-                    : "text-muted-foreground"
-                )}
-                aria-label="Vista lista"
-              >
-                <LayoutList className="size-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setMobilePane("map")}
-                className={cn(
-                  "flex size-8 items-center justify-center rounded-full transition-colors",
-                  mobilePane === "map"
-                    ? "bg-muted text-foreground"
-                    : "text-muted-foreground"
-                )}
-                aria-label="Vista mapa"
-              >
-                <MapIcon className="size-3.5" />
-              </button>
-            </div>
-            <button
-              type="button"
-              onClick={() => setListOpen((v) => !v)}
-              className="hidden size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:flex"
-              aria-label={listOpen ? "Ocultar lista" : "Mostrar lista"}
-            >
-              {listOpen ? (
-                <PanelLeftClose className="size-4" />
-              ) : (
-                <PanelLeftOpen className="size-4" />
-              )}
-            </button>
-          </div>
+          {/* Filtros at the end (where list toggle used to live) */}
+          <button
+            type="button"
+            onClick={openFiltersDialog}
+            className={cn(
+              "inline-flex h-9 shrink-0 items-center gap-2 rounded-full border px-3.5 text-[13px] font-medium shadow-soft transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+              activeFilterCount > 0
+                ? "border-foreground bg-background text-foreground"
+                : "border-border bg-background text-foreground hover:border-foreground/40"
+            )}
+          >
+            <SlidersHorizontal className="size-3.5" />
+            Filtros
+            {activeFilterCount > 0 && (
+              <span className="flex size-5 items-center justify-center rounded-full bg-foreground text-[11px] font-bold text-background">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
         </div>
       </div>
 
-      {/* ── Layer 2: floating results list ────────────────────────────── */}
+      {/* ── Layer 2: full-height results list ─────────────────────────── */}
       <div
         className={cn(
           "absolute z-10 flex flex-col overflow-hidden rounded-2xl border border-border bg-background/98 shadow-lift backdrop-blur-xl transition-all duration-200",
-          // Desktop: left panel under filters
-          "lg:top-[4.25rem] lg:bottom-3 lg:left-3 lg:w-[min(400px,calc(100%-1.5rem))]",
+          // Desktop: full height minus corner gaps
+          "lg:inset-y-3 lg:left-3 lg:w-[min(400px,calc(100%-1.5rem))]",
           listOpen ? "lg:opacity-100 lg:translate-x-0" : "lg:pointer-events-none lg:opacity-0 lg:-translate-x-2",
-          // Mobile: full width under filters when list pane active
+          // Mobile: full width under filter chips when list pane active
           mobilePane === "list"
             ? "inset-x-3 top-[4.25rem] bottom-[4.5rem] opacity-100"
             : "pointer-events-none inset-x-3 top-[4.25rem] bottom-[4.5rem] opacity-0 max-lg:hidden"
