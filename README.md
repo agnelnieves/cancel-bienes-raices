@@ -16,6 +16,17 @@ pnpm install
 pnpm dev
 ```
 
+## Deployments (Vercel)
+
+Each app is its own Vercel project (root directory + filtered pnpm build):
+
+| App | Vercel project | Production |
+| --- | --- | --- |
+| Landing (`apps/web`) | `cancel-bienes-raices` | https://cancel-bienes-raices.vercel.app |
+| Platform (`apps/app`) | `cancel-app` | https://cancel-app-zeta.vercel.app |
+
+Config lives in `apps/web/vercel.json` and `apps/app/vercel.json`. Git pushes to `main` deploy both.
+
 Ver [AGENTS.md](./AGENTS.md) para arquitectura y convenciones.
 
 La planificación de lanzamiento, costos, investigación de viabilidad y demás
