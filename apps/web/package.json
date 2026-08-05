@@ -12,6 +12,7 @@
   "dependencies": {
     "@cancel/data": "workspace:*",
     "@cancel/ui": "workspace:*",
+    "lenis": "^1.3.25",
     "lucide-react": "^1.8.0",
     "motion": "^12.0.0",
     "next": "16.1.7",

@@ -1,61 +1,59 @@
 "use client"
 
 import * as React from "react"
-import { motion } from "motion/react"
+import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import {
-  ArrowRight,
   ArrowUpRight,
   BadgeCheck,
   GitCompareArrows,
   HardHat,
   KanbanSquare,
   Landmark,
-  Search,
+  Map,
   Sparkles,
 } from "lucide-react"
 
-import { formatCompact, formatCurrency, soldProperties, zones } from "@cancel/data"
+import { formatCompact, formatCurrency, soldProperties } from "@cancel/data"
 import { cn } from "@cancel/ui"
 
-import { Reveal } from "./reveal"
+import { easeOut } from "./motion"
+import { Reveal, SectionLabel } from "./reveal"
 
 export function ToolsBento() {
   return (
-    <section id="herramientas" className="scroll-mt-24 py-24">
+    <section id="herramientas" className="scroll-mt-24 py-20 sm:py-28">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <p className="text-xs font-semibold tracking-widest text-primary uppercase">
-            Las herramientas
-          </p>
-          <h2 className="mt-3 font-heading text-3xl font-extrabold tracking-tight text-balance sm:text-[42px] sm:leading-[1.1]">
+          <SectionLabel>Las herramientas</SectionLabel>
+          <h2 className="mt-3 font-heading text-[28px] font-bold tracking-tight text-balance sm:text-[40px] sm:leading-[1.12]">
             Todo lo que necesitas para decidir si un deal vale la pena
           </h2>
-          <p className="mt-4 text-lg text-muted-foreground">
-            Seis herramientas integradas entre sí — lo que encuentras en una,
-            lo usas en todas.
+          <p className="mt-4 text-base leading-relaxed text-muted-foreground sm:text-lg">
+            Seis herramientas integradas: lo que encuentras en una, lo usas en
+            todas.
           </p>
         </Reveal>
 
-        <div className="mt-14 grid gap-4 md:grid-cols-6">
+        <div className="mt-12 grid gap-3 sm:mt-14 sm:gap-4 md:grid-cols-6">
           <Reveal className="md:col-span-4 md:row-span-2">
             <ComparablesCell />
           </Reveal>
-          <Reveal className="md:col-span-2 md:row-span-2" delay={0.1}>
+          <Reveal className="md:col-span-2 md:row-span-2" delay={0.08}>
             <CopilotoCell />
           </Reveal>
-          <Reveal className="md:col-span-2" delay={0.05}>
+          <Reveal className="md:col-span-2" delay={0.04}>
             <CalculadoraCell />
           </Reveal>
-          <Reveal className="md:col-span-2" delay={0.1}>
+          <Reveal className="md:col-span-2" delay={0.08}>
             <DealsCell />
           </Reveal>
-          <Reveal className="md:col-span-2" delay={0.15}>
+          <Reveal className="md:col-span-2" delay={0.12}>
             <CreditoCell />
           </Reveal>
-          <Reveal className="md:col-span-3" delay={0.2}>
+          <Reveal className="md:col-span-3" delay={0.16}>
             <ContratistasCell />
           </Reveal>
-          <Reveal className="md:col-span-3" delay={0.25}>
+          <Reveal className="md:col-span-3" delay={0.2}>
             <EstimadorCell />
           </Reveal>
         </div>
@@ -82,18 +80,18 @@ function Cell({
   return (
     <div
       className={cn(
-        "group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card transition-all hover:border-primary/30 hover:shadow-lift",
+        "group relative flex h-full flex-col overflow-hidden rounded-3xl border border-border/80 bg-card shadow-card transition-[border-color,box-shadow] duration-300 ease-out hover:border-primary/25 hover:shadow-lift",
         className
       )}
     >
-      <div className="p-6 pb-0">
-        <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10">
-          <Icon className="size-5 text-primary" />
+      <div className="p-5 pb-0 sm:p-6 sm:pb-0">
+        <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/10 transition-colors duration-300 group-hover:bg-primary/15">
+          <Icon className="size-5 text-primary" strokeWidth={1.75} />
         </div>
-        <h3 className="mt-4 font-heading text-lg font-bold tracking-tight">
+        <h3 className="mt-4 font-heading text-[17px] font-bold tracking-tight">
           {title}
         </h3>
-        <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
+        <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted-foreground">
           {description}
         </p>
       </div>
@@ -110,49 +108,59 @@ function ComparablesCell() {
     []
   )
   const [active, setActive] = React.useState(0)
+  const reduce = useReducedMotion()
 
   React.useEffect(() => {
-    const t = setInterval(() => setActive((a) => (a + 1) % comps.length), 2600)
+    if (reduce) return
+    const t = setInterval(() => setActive((a) => (a + 1) % comps.length), 2800)
     return () => clearInterval(t)
-  }, [comps.length])
+  }, [comps.length, reduce])
 
   return (
     <Cell
-      icon={Search}
+      icon={Map}
       title="Buscador de Comparables"
-      description="Propiedades similares vendidas con precios reales — incluyendo los cash deals que reporta nuestra red de realtors y que no aparecen en ningún sistema público."
+      description="Propiedades similares vendidas con precios reales, incluyendo cash deals de nuestra red que no aparecen en ningún sistema público."
     >
-      <div className="space-y-2 px-6 pb-6">
+      <div className="space-y-2 px-5 pb-5 sm:px-6 sm:pb-6">
         {comps.map((p, i) => (
           <div
             key={p.id}
             className={cn(
-              "flex items-center justify-between gap-3 rounded-xl border p-3 transition-all duration-500",
+              "flex items-center justify-between gap-3 rounded-xl border p-3 transition-all duration-500 ease-out",
               i === active
-                ? "border-primary/40 bg-primary/5 scale-[1.01]"
-                : "border-border bg-background opacity-70"
+                ? "border-primary/35 bg-primary/5 shadow-card"
+                : "border-border/70 bg-background opacity-65"
             )}
           >
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <BadgeCheck className="size-3 shrink-0 text-cash" />
-                <span className="text-xs font-bold tracking-wide text-cash">
-                  CASH · EXCLUSIVO
+                <span className="text-[11px] font-semibold text-cash">
+                  Cash · Exclusivo
                 </span>
-                <span className="text-[10px] text-muted-foreground">{p.city}</span>
+                <span className="text-[11px] text-muted-foreground">
+                  {p.city}
+                </span>
               </div>
-              <p className="mt-0.5 truncate text-xs font-medium">{p.address}</p>
+              <p className="mt-1 truncate text-[12.5px] font-medium">
+                {p.address}
+              </p>
             </div>
             <div className="shrink-0 text-right">
-              <p className="font-heading text-sm font-bold">{formatCompact(p.price)}</p>
-              <p className="text-[9px] text-muted-foreground">${p.pricePerSqFt}/pc</p>
+              <p className="font-heading text-[13.5px] font-bold tabular-nums">
+                {formatCompact(p.price)}
+              </p>
+              <p className="text-[10px] tabular-nums text-muted-foreground">
+                ${p.pricePerSqFt}/pc
+              </p>
             </div>
           </div>
         ))}
-        <div className="flex items-center justify-between pt-1 text-[11px] text-muted-foreground">
+        <div className="flex items-center justify-between pt-1 text-[12px] text-muted-foreground">
           <span>+1,284 comparables en toda la isla</span>
           <span className="inline-flex items-center gap-1 font-medium text-primary">
-            Explorar <ArrowUpRight className="size-3" />
+            Explorar <ArrowUpRight className="size-3.5" />
           </span>
         </div>
       </div>
@@ -167,73 +175,91 @@ const CHAT_SCRIPT = [
   { role: "thinking" as const, text: "Cruzando MLS + red de cash deals…" },
   {
     role: "assistant" as const,
-    text: "Encontré 4 comparables. 2 son cash deals exclusivos — mediana $127/pc:",
+    text: "Encontré 4 comparables. 2 son cash deals exclusivos, mediana $127/pc:",
   },
 ]
 
 function CopilotoCell() {
   const [step, setStep] = React.useState(0)
+  const reduce = useReducedMotion()
+  const sample = soldProperties.find((p) => p.id === "p-021")!
 
   React.useEffect(() => {
-    const t = setInterval(() => setStep((s) => (s + 1) % (CHAT_SCRIPT.length + 1)), 2200)
+    if (reduce) {
+      setStep(CHAT_SCRIPT.length - 1)
+      return
+    }
+    const t = setInterval(
+      () => setStep((s) => (s + 1) % (CHAT_SCRIPT.length + 1)),
+      2200
+    )
     return () => clearInterval(t)
-  }, [])
-
-  const sample = soldProperties.find((p) => p.id === "p-021")!
+  }, [reduce])
 
   return (
     <Cell
       icon={Sparkles}
       title="Copiloto AI"
-      description="Pídele lo que sea en español — busca, calcula y mueve tu pipeline por ti."
+      description="Pídele lo que sea en español: busca, calcula y mueve tu pipeline por ti."
     >
-      <div className="space-y-2.5 px-6 pb-6">
-        {CHAT_SCRIPT.slice(0, step + 1).map((msg, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35 }}
-            className={cn(
-              msg.role === "user" && "flex justify-end",
-              msg.role === "thinking" && "flex items-center gap-2 text-[10px] text-muted-foreground"
-            )}
-          >
-            {msg.role === "user" && (
-              <div className="max-w-[90%] rounded-2xl rounded-br-md bg-primary px-3 py-2 text-[11px] text-primary-foreground">
-                {msg.text}
-              </div>
-            )}
-            {msg.role === "thinking" && (
-              <>
-                <span className="flex gap-0.5">
-                  <span className="size-1 rounded-full bg-primary animate-typing" />
-                  <span className="size-1 rounded-full bg-primary animate-typing [animation-delay:150ms]" />
-                  <span className="size-1 rounded-full bg-primary animate-typing [animation-delay:300ms]" />
-                </span>
-                {msg.text}
-              </>
-            )}
-            {msg.role === "assistant" && (
-              <div className="rounded-2xl rounded-bl-md border border-border bg-muted/50 px-3 py-2 text-[11px] leading-relaxed">
-                {msg.text}
-                <div className="mt-2 flex items-center justify-between rounded-lg border border-border bg-card p-2">
-                  <div>
-                    <p className="text-[10px] font-medium">{sample.address}</p>
-                    <p className="text-[9px] text-muted-foreground">{sample.city}</p>
+      <div className="flex h-full flex-col space-y-2.5 px-5 pb-5 sm:px-6 sm:pb-6">
+        <div className="min-h-[168px] flex-1 space-y-2.5">
+          <AnimatePresence mode="popLayout" initial={false}>
+            {CHAT_SCRIPT.slice(0, step + 1).map((msg, i) => (
+              <motion.div
+                key={`${msg.role}-${i}`}
+                initial={{ opacity: 0, y: reduce ? 0 : 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, ease: easeOut }}
+                className={cn(
+                  msg.role === "user" && "flex justify-end",
+                  msg.role === "thinking" &&
+                    "flex items-center gap-2 text-[11px] text-muted-foreground"
+                )}
+              >
+                {msg.role === "user" && (
+                  <div className="max-w-[92%] rounded-2xl rounded-br-md bg-primary px-3 py-2 text-[11.5px] text-primary-foreground">
+                    {msg.text}
                   </div>
-                  <p className="font-heading text-[11px] font-bold">
-                    {formatCompact(sample.price)}
-                  </p>
-                </div>
-              </div>
-            )}
-          </motion.div>
-        ))}
-        <div className="flex items-center gap-2 rounded-full border border-border bg-background px-3.5 py-2 text-[10px] text-muted-foreground">
-          <Sparkles className="size-3 text-primary" />
+                )}
+                {msg.role === "thinking" && (
+                  <>
+                    <span className="flex gap-0.5" aria-hidden>
+                      <span className="size-1 rounded-full bg-primary animate-typing" />
+                      <span className="size-1 rounded-full bg-primary animate-typing [animation-delay:150ms]" />
+                      <span className="size-1 rounded-full bg-primary animate-typing [animation-delay:300ms]" />
+                    </span>
+                    {msg.text}
+                  </>
+                )}
+                {msg.role === "assistant" && (
+                  <div className="rounded-2xl rounded-bl-md border border-border/80 bg-muted/50 px-3 py-2 text-[11.5px] leading-relaxed">
+                    {msg.text}
+                    <div className="mt-2 flex items-center justify-between rounded-lg border border-border/80 bg-card p-2 shadow-card">
+                      <div className="min-w-0">
+                        <p className="truncate text-[11px] font-medium">
+                          {sample.address}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {sample.city}
+                        </p>
+                      </div>
+                      <p className="font-heading text-[12px] font-bold tabular-nums">
+                        {formatCompact(sample.price)}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+        <div className="flex items-center gap-2 rounded-full border border-border/80 bg-background px-3.5 py-2.5 text-[11px] text-muted-foreground shadow-card">
+          <Sparkles className="size-3.5 text-primary" />
           Pregúntale lo que sea…
-          <kbd className="ml-auto rounded border border-border px-1">⌘K</kbd>
+          <kbd className="ml-auto rounded-md border border-border bg-muted/60 px-1.5 py-0.5 text-[10px] font-medium">
+            ⌘K
+          </kbd>
         </div>
       </div>
     </Cell>
@@ -256,22 +282,38 @@ function CalculadoraCell() {
       title="Calculadora ROI"
       description="Cap rate, cash flow y break-even sin abrir Excel."
     >
-      <div className="space-y-3 px-6 pb-6">
-        <MiniSlider label="Precio" value={price} min={80000} max={400000} step={5000} onChange={setPrice} format={(v) => formatCompact(v)} />
-        <MiniSlider label="Renta" value={rent} min={800} max={3000} step={50} onChange={setRent} format={(v) => `${formatCurrency(v)}/mes`} />
-        <div className="flex items-end justify-between rounded-xl bg-primary/5 p-3">
+      <div className="space-y-3 px-5 pb-5 sm:px-6 sm:pb-6">
+        <MiniSlider
+          label="Precio"
+          value={price}
+          min={80000}
+          max={400000}
+          step={5000}
+          onChange={setPrice}
+          format={(v) => formatCompact(v)}
+        />
+        <MiniSlider
+          label="Renta"
+          value={rent}
+          min={800}
+          max={3000}
+          step={50}
+          onChange={setRent}
+          format={(v) => `${formatCurrency(v)}/mes`}
+        />
+        <div className="flex items-end justify-between rounded-xl bg-primary/5 p-3.5 ring-1 ring-primary/10">
           <div>
-            <p className="text-[9px] font-semibold tracking-widest text-muted-foreground uppercase">
+            <p className="text-[11px] font-medium text-muted-foreground">
               Cash-on-cash
             </p>
-            <p className="font-heading text-2xl font-extrabold text-primary">
+            <p className="font-heading text-2xl font-bold tabular-nums tracking-tight text-primary">
               {coc.toFixed(1)}%
             </p>
           </div>
-          <p className="text-right text-[10px] leading-snug text-muted-foreground">
+          <p className="text-right text-[11px] leading-snug text-muted-foreground">
             Cash flow ≈ {formatCurrency(Math.round(noi))}/mes
             <br />
-            {coc >= 10 ? "🔥 deal brutal" : coc >= 6 ? "decente" : "flojo"}
+            {coc >= 10 ? "deal fuerte" : coc >= 6 ? "decente" : "flojo"}
           </p>
         </div>
       </div>
@@ -298,9 +340,9 @@ function MiniSlider({
 }) {
   return (
     <div>
-      <div className="flex items-center justify-between text-[11px]">
+      <div className="flex items-center justify-between text-[12px]">
         <span className="text-muted-foreground">{label}</span>
-        <span className="font-semibold">{format(value)}</span>
+        <span className="font-semibold tabular-nums">{format(value)}</span>
       </div>
       <input
         type="range"
@@ -309,7 +351,8 @@ function MiniSlider({
         max={max}
         step={step}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="mt-1.5 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-muted accent-[var(--primary)]"
+        className="mt-2 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-muted accent-[var(--primary)]"
+        aria-label={label}
       />
     </div>
   )
@@ -319,7 +362,13 @@ function MiniSlider({
 
 function DealsCell() {
   const cols = [
-    { label: "Prospecto", deals: [{ a: "Caguas", p: "$142K" }, { a: "Ponce", p: "$87K" }] },
+    {
+      label: "Prospecto",
+      deals: [
+        { a: "Caguas", p: "$142K" },
+        { a: "Ponce", p: "$87K" },
+      ],
+    },
     { label: "Oferta", deals: [{ a: "Bayamón", p: "$118K" }] },
     { label: "Cierre", deals: [{ a: "Santurce", p: "$315K" }] },
   ]
@@ -329,17 +378,25 @@ function DealsCell() {
       title="Deal Tracker"
       description="Tu pipeline de prospecto a cierre, siempre a la vista."
     >
-      <div className="flex gap-2 px-6 pb-6">
+      <div className="flex gap-2 px-5 pb-5 sm:px-6 sm:pb-6">
         {cols.map((col) => (
-          <div key={col.label} className="flex-1 rounded-xl bg-muted/60 p-2">
-            <p className="px-1 text-[9px] font-semibold tracking-wide text-muted-foreground uppercase">
+          <div
+            key={col.label}
+            className="flex-1 rounded-xl bg-muted/70 p-2 ring-1 ring-border/40"
+          >
+            <p className="px-1 text-[10px] font-semibold tracking-tight text-muted-foreground">
               {col.label}
             </p>
             <div className="mt-1.5 space-y-1.5">
               {col.deals.map((d) => (
-                <div key={d.a} className="rounded-lg border border-border bg-card p-2">
-                  <p className="truncate text-[10px] font-medium">{d.a}</p>
-                  <p className="font-heading text-[11px] font-bold">{d.p}</p>
+                <div
+                  key={d.a}
+                  className="rounded-lg border border-border/70 bg-card p-2 shadow-card"
+                >
+                  <p className="truncate text-[11px] font-medium">{d.a}</p>
+                  <p className="font-heading text-[12px] font-bold tabular-nums">
+                    {d.p}
+                  </p>
                 </div>
               ))}
             </div>
@@ -364,32 +421,44 @@ function CreditoCell() {
       title="Planner de Crédito"
       description="La jugada de líneas al 0%, mapeada sin dañar tu score."
     >
-      <div className="space-y-2.5 px-6 pb-6">
+      <div className="space-y-2.5 px-5 pb-5 sm:px-6 sm:pb-6">
         {cards.map((c) => (
           <div key={c.name}>
-            <div className="flex items-center justify-between text-[10px]">
-              <span className={cn("font-medium", c.promo && "text-primary")}>
+            <div className="flex items-center justify-between text-[11.5px]">
+              <span
+                className={cn("font-medium", c.promo && "text-primary")}
+              >
                 {c.name}
               </span>
-              <span className={cn("font-semibold", c.pct <= 30 ? "text-primary" : "text-amber-500")}>
+              <span
+                className={cn(
+                  "font-semibold tabular-nums",
+                  c.pct <= 30 ? "text-primary" : "text-warning"
+                )}
+              >
                 {c.pct}%
               </span>
             </div>
-            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
+            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted">
               <motion.div
                 initial={{ width: 0 }}
                 whileInView={{ width: `${c.pct}%` }}
                 viewport={{ once: true }}
-                transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-                className={cn("h-full rounded-full", c.pct <= 30 ? "bg-primary" : "bg-amber-500")}
+                transition={{ duration: 0.9, ease: easeOut }}
+                className={cn(
+                  "h-full rounded-full",
+                  c.pct <= 30 ? "bg-primary" : "bg-warning"
+                )}
               />
             </div>
           </div>
         ))}
-        <div className="flex items-center gap-2 rounded-xl border border-primary/25 bg-primary/5 px-3 py-2 text-[10px]">
-          <Sparkles className="size-3 shrink-0 text-primary" />
+        <div className="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5 text-[11.5px]">
+          <Sparkles className="size-3.5 shrink-0 text-primary" />
           <span className="text-muted-foreground">
-            Plan de jugada: <strong className="text-foreground">$40K</strong> distribuidos sin pasar del 30%
+            Plan:{" "}
+            <strong className="font-semibold text-foreground">$40K</strong>{" "}
+            sin pasar del 30%
           </span>
         </div>
       </div>
@@ -409,34 +478,36 @@ function ContratistasCell() {
     <Cell
       icon={HardHat}
       title="Red de Contratistas"
-      description="Profesionales vetados por la comunidad — licencia y seguro verificados, con precios de referencia claros."
+      description="Profesionales vetados por la comunidad, con licencia y precios de referencia."
     >
-      <div className="space-y-2 px-6 pb-6">
+      <div className="space-y-2 px-5 pb-5 sm:px-6 sm:pb-6">
         {pros.map((p) => (
           <div
             key={p.name}
-            className="flex items-center justify-between gap-3 rounded-xl border border-border bg-background p-3"
+            className="flex items-center justify-between gap-3 rounded-xl border border-border/70 bg-background p-3"
           >
             <div className="flex min-w-0 items-center gap-2.5">
               <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[11px] font-bold text-primary">
                 {p.name.slice(0, 1)}
               </span>
               <div className="min-w-0">
-                <p className="flex items-center gap-1 truncate text-[11px] font-semibold">
+                <p className="flex items-center gap-1 truncate text-[12px] font-semibold">
                   {p.name}
                   <BadgeCheck className="size-3 shrink-0 text-primary" />
                 </p>
-                <p className="text-[10px] text-muted-foreground">{p.trade}</p>
+                <p className="text-[11px] text-muted-foreground">{p.trade}</p>
               </div>
             </div>
             <div className="shrink-0 text-right">
-              <p className="text-[11px] font-bold">★ {p.rating}</p>
-              <p className="text-[9px] text-muted-foreground">{p.jobs} trabajos</p>
+              <p className="text-[12px] font-bold tabular-nums">★ {p.rating}</p>
+              <p className="text-[10px] text-muted-foreground">
+                {p.jobs} trabajos
+              </p>
             </div>
           </div>
         ))}
-        <p className="pt-0.5 text-center text-[10px] text-muted-foreground">
-          El orden de los resultados no se vende — se gana con trabajos reales.
+        <p className="pt-0.5 text-center text-[11px] text-muted-foreground">
+          El orden no se vende. Se gana con trabajos reales.
         </p>
       </div>
     </Cell>
@@ -458,21 +529,23 @@ function EstimadorCell() {
       title="Estimador de Remodelación"
       description="Presupuesto por partida con precios reales de mano de obra de Puerto Rico."
     >
-      <div className="space-y-2 px-6 pb-6">
+      <div className="space-y-2 px-5 pb-5 sm:px-6 sm:pb-6">
         {rows.map((r) => (
           <div
             key={r.label}
-            className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2 text-[11px]"
+            className="flex items-center justify-between rounded-lg border border-border/70 bg-background px-3 py-2.5 text-[12.5px]"
           >
             <span className="text-muted-foreground">{r.label}</span>
-            <span className="font-semibold">{r.price}</span>
+            <span className="font-semibold tabular-nums">{r.price}</span>
           </div>
         ))}
-        <div className="flex items-center justify-between rounded-xl bg-primary/5 px-3 py-2.5">
-          <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+        <div className="flex items-center justify-between rounded-xl bg-primary/5 px-3.5 py-3 ring-1 ring-primary/10">
+          <span className="text-[12px] font-medium text-muted-foreground">
             Total estimado
           </span>
-          <span className="font-heading text-sm font-extrabold text-primary">$39.7K</span>
+          <span className="font-heading text-[15px] font-bold tabular-nums text-primary">
+            $39.7K
+          </span>
         </div>
       </div>
     </Cell>

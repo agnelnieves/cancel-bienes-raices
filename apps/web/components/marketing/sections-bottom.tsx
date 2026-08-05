@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowRight, BadgeCheck, Check, Crown, Users } from "lucide-react"
+import { ArrowRight, Check, Crown, Users } from "lucide-react"
 
 import {
   Accordion,
@@ -12,7 +12,7 @@ import {
 } from "@cancel/ui"
 
 import { links } from "@/lib/config"
-import { Reveal } from "./reveal"
+import { Reveal, SectionLabel } from "./reveal"
 
 // ------------------------------------------------------------------ Pricing
 
@@ -54,7 +54,8 @@ export function Pricing() {
       name: "Comunidad",
       price: "Incluido",
       period: "con tu membresía",
-      description: "Si ya eres miembro de la comunidad de Christopher, entra directo.",
+      description:
+        "Si ya eres miembro de la comunidad de Christopher, entra directo.",
       features: [
         "Todo lo de Pro incluido",
         "Acceso vía tu cuenta de la comunidad",
@@ -67,57 +68,60 @@ export function Pricing() {
   ]
 
   return (
-    <section id="precios" className="scroll-mt-24 py-24">
+    <section id="precios" className="scroll-mt-24 py-20 sm:py-28">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <p className="text-xs font-semibold tracking-widest text-primary uppercase">
-            Precios
-          </p>
-          <h2 className="mt-3 font-heading text-3xl font-extrabold tracking-tight text-balance sm:text-[42px]">
+          <SectionLabel>Precios</SectionLabel>
+          <h2 className="mt-3 font-heading text-[28px] font-bold tracking-tight text-balance sm:text-[40px] sm:leading-[1.12]">
             Un solo deal bueno paga esto por años
           </h2>
-          <p className="mt-4 text-lg text-muted-foreground">
+          <p className="mt-4 text-base leading-relaxed text-muted-foreground sm:text-lg">
             PropStream cuesta $99/mes y no tiene ni un comparable de Puerto
             Rico. Nosotros nacimos aquí.
           </p>
         </Reveal>
 
-        <div className="mt-14 grid gap-5 lg:grid-cols-3">
+        <div className="mt-14 grid items-stretch gap-5 sm:mt-16 lg:grid-cols-3">
           {tiers.map((tier, i) => (
-            <Reveal key={tier.name} delay={i * 0.08}>
+            <Reveal key={tier.name} delay={i * 0.07} className="h-full">
               <div
                 className={cn(
-                  "relative flex h-full flex-col rounded-2xl border p-7",
+                  "relative flex h-full flex-col rounded-3xl p-7 sm:p-8",
                   tier.featured
-                    ? "border-primary/50 bg-card shadow-lift"
-                    : "border-border bg-card"
+                    ? "border border-primary/30 bg-card shadow-[0_2px_4px_rgb(34_34_34/0.04),0_24px_56px_-16px_rgb(29_158_117/0.22),0_0_0_1px_rgb(29_158_117/0.10)]"
+                    : "border border-border/80 bg-card shadow-card"
                 )}
               >
                 {tier.featured && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-[10px] font-bold tracking-wide text-primary-foreground uppercase">
+                  <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-primary px-4 py-1.5 text-[11px] font-semibold tracking-tight text-primary-foreground shadow-soft">
                     Más popular
                   </span>
                 )}
                 <div className="flex items-center gap-2">
                   {tier.name === "Comunidad" && (
-                    <Crown className="size-4 text-primary" />
+                    <Crown className="size-4 text-primary" strokeWidth={1.75} />
                   )}
-                  <h3 className="font-heading text-lg font-bold">{tier.name}</h3>
+                  <h3 className="font-heading text-[17px] font-bold tracking-tight">
+                    {tier.name}
+                  </h3>
                 </div>
-                <div className="mt-4 flex items-baseline gap-1.5">
-                  <span className="font-heading text-4xl font-extrabold tracking-tight">
+                <div className="mt-5 flex items-baseline gap-1.5">
+                  <span className="font-heading text-[44px] leading-none font-bold tracking-tight tabular-nums">
                     {tier.price}
                   </span>
                   <span className="text-sm text-muted-foreground">
                     {tier.period}
                   </span>
                 </div>
-                <p className="mt-2 text-[13px] text-muted-foreground">
+                <p className="mt-3 text-[13.5px] leading-relaxed text-muted-foreground">
                   {tier.description}
                 </p>
-                <ul className="mt-6 flex-1 space-y-2.5">
+                <ul className="mt-7 flex-1 space-y-3">
                   {tier.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2.5 text-[13.5px]">
+                    <li
+                      key={f}
+                      className="flex items-start gap-2.5 text-[13.5px] leading-snug"
+                    >
                       <Check className="mt-0.5 size-4 shrink-0 text-primary" />
                       {f}
                     </li>
@@ -126,7 +130,7 @@ export function Pricing() {
                 <Button
                   size="lg"
                   variant={tier.featured ? "default" : "outline"}
-                  className="mt-7 w-full"
+                  className="mt-8 h-11 w-full rounded-full"
                   asChild
                 >
                   <a href={links.signup}>{tier.cta}</a>
@@ -136,8 +140,11 @@ export function Pricing() {
           ))}
         </div>
 
-        <Reveal className="mt-6 text-center text-xs text-muted-foreground" delay={0.2}>
-          Precio de fundador — sube cuando salgamos de beta. Sin contratos,
+        <Reveal
+          className="mt-8 text-center text-[12.5px] text-muted-foreground"
+          delay={0.15}
+        >
+          Precio de fundador. Sube cuando salgamos de beta. Sin contratos,
           cancela cuando quieras.
         </Reveal>
       </div>
@@ -151,7 +158,7 @@ export function Testimonials() {
   const testimonials = [
     {
       quote:
-        "Cerré mi primer deal del año con la jugada de crédito y los comparables de la plataforma. El cash deal que usé para negociar no salía en ningún lado — $27K menos de lo que pedían.",
+        "Cerré mi primer deal del año con la jugada de crédito y los comparables de la plataforma. El cash deal que usé para negociar no salía en ningún lado: $27K menos de lo que pedían.",
       name: "Jorge Medina",
       initials: "JM",
       role: "Inversionista · Bayamón",
@@ -173,41 +180,46 @@ export function Testimonials() {
   ]
 
   return (
-    <section className="border-y border-border/60 bg-muted/30 py-24">
+    <section className="border-y border-border/60 bg-sidebar py-20 sm:py-28">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <div className="flex items-center justify-center gap-1.5">
-            <Users className="size-4 text-primary" />
-            <p className="text-xs font-semibold tracking-widest text-primary uppercase">
-              La comunidad
-            </p>
+          <div className="flex items-center justify-center gap-2">
+            <Users className="size-4 text-primary" strokeWidth={1.75} />
+            <SectionLabel>La comunidad</SectionLabel>
           </div>
-          <h2 className="mt-3 font-heading text-3xl font-extrabold tracking-tight text-balance sm:text-[42px]">
+          <h2 className="mt-3 font-heading text-[28px] font-bold tracking-tight text-balance sm:text-[40px] sm:leading-[1.12]">
             Hecha con los inversionistas que la usan todos los días
           </h2>
         </Reveal>
 
-        <div className="mt-14 grid gap-5 md:grid-cols-3">
+        <div className="mt-12 grid gap-4 sm:mt-14 md:grid-cols-3 md:gap-5">
           {testimonials.map((t, i) => (
-            <Reveal key={t.name} delay={i * 0.08}>
-              <figure className="flex h-full flex-col rounded-2xl border border-border bg-card p-6">
-                <div className="flex gap-0.5">
+            <Reveal key={t.name} delay={i * 0.07} className="h-full">
+              <figure className="flex h-full flex-col rounded-3xl border border-border/70 bg-card p-7 shadow-card">
+                <div className="flex gap-0.5" aria-label="5 de 5 estrellas">
                   {Array.from({ length: 5 }).map((_, j) => (
-                    <svg key={j} className="size-4 fill-amber-400" viewBox="0 0 20 20">
+                    <svg
+                      key={j}
+                      className="size-3.5 fill-amber-400"
+                      viewBox="0 0 20 20"
+                      aria-hidden
+                    >
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                     </svg>
                   ))}
                 </div>
-                <blockquote className="mt-4 flex-1 text-[14px] leading-relaxed text-foreground/90">
+                <blockquote className="mt-4 flex-1 text-[14.5px] leading-relaxed text-foreground/90">
                   “{t.quote}”
                 </blockquote>
-                <figcaption className="mt-5 flex items-center gap-3 border-t border-border pt-4">
-                  <span className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                <figcaption className="mt-6 flex items-center gap-3 border-t border-border/70 pt-5">
+                  <span className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-[12px] font-bold text-primary">
                     {t.initials}
                   </span>
                   <div>
-                    <p className="text-[13px] font-semibold">{t.name}</p>
-                    <p className="text-[11px] text-muted-foreground">{t.role}</p>
+                    <p className="text-[13.5px] font-semibold tracking-tight">
+                      {t.name}
+                    </p>
+                    <p className="text-[12px] text-muted-foreground">{t.role}</p>
                   </div>
                 </figcaption>
               </figure>
@@ -225,19 +237,19 @@ export function Faq() {
   const faqs = [
     {
       q: "¿De dónde sale la data de comparables?",
-      a: "Combinamos cuatro fuentes: MLS de Puerto Rico, el Registro de la Propiedad, data del CRIM, y nuestra fuente estrella — una red de realtors activos que reportan sus ventas en efectivo (cash deals) directamente a la plataforma. Cada comparable muestra su fuente, y los exclusivos van verificados.",
+      a: "Combinamos cuatro fuentes: MLS de Puerto Rico, el Registro de la Propiedad, data del CRIM, y nuestra fuente estrella: una red de realtors activos que reportan sus ventas en efectivo (cash deals) directamente a la plataforma. Cada comparable muestra su fuente, y los exclusivos van verificados.",
     },
     {
       q: "¿Qué es un cash deal y por qué importa tanto?",
-      a: "Una venta en efectivo que muchas veces nunca se lista en MLS ni aparece en portales como Zillow. En PR representan una porción enorme del mercado real. Sin esos precios, tu análisis usa solo la mitad de la foto — y suele ser la mitad más cara. Con ellos, sabes lo que la gente realmente pagó.",
+      a: "Una venta en efectivo que muchas veces nunca se lista en MLS ni aparece en portales como Zillow. En PR representan una porción enorme del mercado real. Sin esos precios, tu análisis usa solo la mitad de la foto, y suele ser la mitad más cara. Con ellos, sabes lo que la gente realmente pagó.",
     },
     {
-      q: "Sirve si estoy empezando y nunca he hecho un deal?",
-      a: "Sí — de hecho está hecha para ti. El onboarding te configura el panel en un minuto según tu experiencia, y el copiloto te explica los números en español claro mientras trabaja: qué es un cap rate, cuándo un deal es bueno, cuándo pasar.",
+      q: "¿Sirve si estoy empezando y nunca he hecho un deal?",
+      a: "Sí. De hecho está hecha para ti. El onboarding te configura el panel en un minuto según tu experiencia, y el copiloto te explica los números en español claro mientras trabaja: qué es un cap rate, cuándo un deal es bueno, cuándo pasar.",
     },
     {
       q: "¿Cubren toda Puerto Rico?",
-      a: "La cobertura más profunda hoy es zona metro (San Juan, Bayamón, Guaynabo, Carolina), Caguas, Ponce, Rincón y Dorado — que es donde se mueve la comunidad. La red de realtors crece cada mes y con ella los municipios cubiertos (ya vamos por 32).",
+      a: "La cobertura más profunda hoy es zona metro (San Juan, Bayamón, Guaynabo, Carolina), Caguas, Ponce, Rincón y Dorado, que es donde se mueve la comunidad. La red de realtors crece cada mes y con ella los municipios cubiertos (ya vamos por 32).",
     },
     {
       q: "¿Y la metodología de invertir con tarjetas de crédito?",
@@ -250,21 +262,22 @@ export function Faq() {
   ]
 
   return (
-    <section id="faq" className="scroll-mt-24 py-24">
-      <div className="mx-auto max-w-3xl px-4 sm:px-6">
+    <section id="faq" className="scroll-mt-24 py-20 sm:py-28">
+      <div className="mx-auto max-w-2xl px-4 sm:px-6">
         <Reveal className="text-center">
-          <h2 className="font-heading text-3xl font-extrabold tracking-tight text-balance sm:text-[42px]">
+          <SectionLabel>FAQ</SectionLabel>
+          <h2 className="mt-3 font-heading text-[28px] font-bold tracking-tight text-balance sm:text-[40px]">
             Preguntas frecuentes
           </h2>
         </Reveal>
-        <Reveal delay={0.1} className="mt-10">
+        <Reveal delay={0.08} className="mt-10">
           <Accordion type="single" collapsible className="w-full">
             {faqs.map((f, i) => (
-              <AccordionItem key={i} value={`faq-${i}`}>
-                <AccordionTrigger className="text-[15px] font-semibold">
+              <AccordionItem key={i} value={`faq-${i}`} className="border-border/70">
+                <AccordionTrigger className="text-left text-[15px] font-semibold tracking-tight hover:no-underline">
                   {f.q}
                 </AccordionTrigger>
-                <AccordionContent className="text-[14px] leading-relaxed text-muted-foreground">
+                <AccordionContent className="text-[14.5px] leading-relaxed text-muted-foreground">
                   {f.a}
                 </AccordionContent>
               </AccordionItem>
@@ -280,35 +293,40 @@ export function Faq() {
 
 export function FinalCta() {
   return (
-    <section className="pb-24">
+    <section className="pb-24 sm:pb-32">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <Reveal>
-          <div className="relative overflow-hidden rounded-3xl bg-primary px-6 py-16 text-center sm:px-16 sm:py-20">
+          <div className="relative overflow-hidden rounded-[32px] bg-[#0e1411] px-6 py-20 text-center sm:rounded-[40px] sm:px-16 sm:py-24">
+            {/* Warm horizon glow, teal family */}
             <div
-              className="absolute inset-0 opacity-20"
+              className="pointer-events-none absolute inset-0"
+              aria-hidden
               style={{
                 backgroundImage:
-                  "radial-gradient(circle at 30% 20%, white 0%, transparent 40%), radial-gradient(circle at 80% 90%, white 0%, transparent 35%)",
+                  "radial-gradient(ellipse 55% 45% at 50% -5%, color-mix(in srgb, #1d9e75 38%, transparent), transparent 70%), radial-gradient(ellipse 45% 45% at 85% 105%, color-mix(in srgb, #1d9e75 14%, transparent), transparent), radial-gradient(ellipse 35% 35% at 10% 100%, color-mix(in srgb, #b85c42 8%, transparent), transparent)",
               }}
             />
             <div className="relative">
-              <BadgeCheck className="mx-auto size-10 text-primary-foreground/80" />
-              <h2 className="mx-auto mt-5 max-w-2xl font-heading text-3xl font-extrabold tracking-tight text-balance text-primary-foreground sm:text-5xl">
+              <h2 className="mx-auto max-w-2xl font-heading text-[32px] font-bold tracking-tight text-balance text-white sm:text-5xl sm:leading-[1.08]">
                 La próxima vez que veas un deal, vas a saber si vale la pena
               </h2>
-              <p className="mx-auto mt-4 max-w-xl text-base text-primary-foreground/80">
+              <p className="mx-auto mt-5 max-w-lg text-base leading-relaxed text-white/60 sm:text-lg">
                 Únete a los inversionistas que ya toman decisiones con data real
                 de Puerto Rico. Gratis para empezar.
               </p>
-              <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                <Button size="lg" variant="secondary" className="gap-2" asChild>
+              <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <Button
+                  size="lg"
+                  className="h-12 gap-2 rounded-full px-8 text-[15px] shadow-lift"
+                  asChild
+                >
                   <a href={links.signup}>
                     Comenzar gratis
-                    <ArrowRight className="size-4" />
+                    <ArrowRight className="size-4 transition-transform duration-150 group-hover/button:translate-x-0.5" />
                   </a>
                 </Button>
               </div>
-              <p className="mt-4 text-xs text-primary-foreground/60">
+              <p className="mt-6 text-[12.5px] text-white/40">
                 5 búsquedas gratis al mes · Sin tarjeta · Cancela cuando quieras
               </p>
             </div>
