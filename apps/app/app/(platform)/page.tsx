@@ -105,7 +105,7 @@ export default function DashboardPage() {
           <p className="text-xs text-muted-foreground first-letter:uppercase">
             {today}
           </p>
-          <h2 className="mt-1.5 font-heading text-[26px] font-semibold tracking-tight sm:text-[28px]">
+          <h2 className="mt-1.5 font-heading text-[26px] font-bold tracking-tight sm:text-[28px]">
             {greeting}, {firstName}
           </h2>
           <p className="mt-1.5 text-sm text-muted-foreground">

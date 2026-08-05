@@ -72,3 +72,5 @@ Correr uno solo: `pnpm --filter @cancel/app dev` (o `@cancel/web`).
 - Moneda USD formato `en-US`; fechas `es-PR`.
 - Componentes de UI base siempre en `@cancel/ui` — nunca duplicar en apps.
 - Data/tipos/formatters siempre en `@cancel/data`.
+- **Diseño visual, shell, motion y anti-patrones:** ver [`DESIGN.md`](./DESIGN.md)
+  (fuente de verdad para UI). Tokens en `packages/ui/src/styles.css`.
