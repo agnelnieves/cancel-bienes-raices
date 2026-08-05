@@ -15,7 +15,6 @@ import {
 import {
   activeListings,
   dealStages,
-  formatCompact,
   formatCurrency,
   formatNumber,
   formatSigned,
@@ -24,13 +23,20 @@ import {
   soldProperties,
   zoneById,
   zones,
+  type Deal,
+  type DealStage,
 } from "@cancel/data"
 import { Button, cn } from "@cancel/ui"
 
 import { Sparkline } from "@/components/charts"
+import { PipelineHero } from "@/components/dashboard/pipeline-hero"
 import { SourceChip } from "@/components/source-chip"
 import { usePipelineStore } from "@/lib/stores/pipeline"
 import { useUserStore } from "@/lib/stores/user"
+
+const STAGE_INDEX = Object.fromEntries(
+  dealStages.map((s, i) => [s.id, i])
+) as Record<DealStage, number>
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -46,15 +52,23 @@ export default function DashboardPage() {
   const activeDeals = deals.filter((d) => d.stage !== "cierre")
   const pipelineValue = activeDeals.reduce((a, d) => a + d.askingPrice, 0)
   const closingDeals = deals.filter((d) => d.stage === "cierre").length
+  const dealsWithRoi = activeDeals.filter((d) => d.roi > 0)
   const avgRoi =
-    activeDeals.length > 0
-      ? activeDeals.reduce((a, d) => a + d.roi, 0) / activeDeals.length
+    dealsWithRoi.length > 0
+      ? dealsWithRoi.reduce((a, d) => a + d.roi, 0) / dealsWithRoi.length
       : 0
+  const pipelineCashFlow = activeDeals.reduce(
+    (a, d) => a + (d.cashFlow || 0),
+    0
+  )
 
   const stageCounts = dealStages.map((s) => ({
     ...s,
     count: deals.filter((d) => d.stage === s.id).length,
   }))
+  const stageTotal = stageCounts.reduce((a, s) => a + s.count, 0) || 1
+
+  const focusDeal = pickFocusDeal(activeDeals)
 
   const pulseZones =
     userZones.length > 0
@@ -62,6 +76,10 @@ export default function DashboardPage() {
       : zones.slice(0, 5)
 
   const topZone = pulseZones.find(Boolean)
+  const hottestZone = [...pulseZones]
+    .filter(Boolean)
+    .sort((a, b) => (b?.yoyChange ?? 0) - (a?.yoyChange ?? 0))[0]
+
   const statusBits: string[] = []
   if (activeDeals.length > 0) {
     statusBits.push(
@@ -73,9 +91,7 @@ export default function DashboardPage() {
     statusBits.push("Añade tu primer deal al pipeline")
   }
   if (topZone) {
-    statusBits.push(
-      `${topZone.name} ${formatSigned(topZone.yoyChange)}`
-    )
+    statusBits.push(`${topZone.name} ${formatSigned(topZone.yoyChange)}`)
   }
 
   const cheapestCash = [...soldProperties]
@@ -84,12 +100,12 @@ export default function DashboardPage() {
     .slice(0, 2)
   const newestListings = [...activeListings]
     .sort((a, b) => a.daysOnMarket - b.daysOnMarket)
-    .slice(0, 1)
+    .slice(0, 2)
 
   const opportunities = [
     ...cheapestCash.map((p) => ({ kind: "cash" as const, property: p })),
     ...newestListings.map((p) => ({ kind: "listing" as const, property: p })),
-  ]
+  ].slice(0, 4)
 
   const today = new Date().toLocaleDateString("es-PR", {
     weekday: "long",
@@ -98,7 +114,7 @@ export default function DashboardPage() {
   })
 
   return (
-    <div className="animate-fade-in space-y-10">
+    <div className="animate-fade-in space-y-9">
       {/* ── Page identity ─────────────────────────────────────────────── */}
       <div className="flex flex-wrap items-end justify-between gap-5">
         <div className="min-w-0">
@@ -133,109 +149,44 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Pipeline hero (single first-fold story) ───────────────────── */}
-      <section className="overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/5 dark:ring-foreground/10">
-        <div className="flex flex-wrap items-end justify-between gap-4 px-5 pt-6 pb-5 sm:px-7">
-          <div className="min-w-0">
-            <p className="text-sm text-muted-foreground">Valor del pipeline</p>
-            <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <p className="font-heading text-[34px] font-semibold tracking-tight tabular-nums sm:text-4xl">
-                {formatCompact(pipelineValue)}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {activeDeals.length} activo
-                {activeDeals.length === 1 ? "" : "s"}
-                {closingDeals > 0 ? ` · ${closingDeals} en cierre` : ""}
-                {avgRoi > 0 ? (
-                  <>
-                    {" · "}
-                    ROI medio{" "}
-                    <span className="font-medium tabular-nums text-foreground">
-                      {avgRoi.toFixed(1)}%
-                    </span>
-                  </>
-                ) : null}
-              </p>
-            </div>
-          </div>
-          <Link
-            href="/deals"
-            className="inline-flex items-center gap-1 text-sm font-medium text-primary outline-none transition-colors hover:text-primary/80 focus-visible:ring-2 focus-visible:ring-ring/40"
-          >
-            Ver deals
-            <ArrowRight className="size-3.5" />
-          </Link>
-        </div>
+      <PipelineHero
+        deals={deals}
+        activeDeals={activeDeals}
+        pipelineValue={pipelineValue}
+        pipelineCashFlow={pipelineCashFlow}
+        closingDeals={closingDeals}
+        avgRoi={avgRoi}
+        stageCounts={stageCounts}
+        stageTotal={stageTotal}
+        focusDeal={focusDeal}
+      />
 
-        {/* Stage distribution — text, not faux progress bars */}
-        <div className="flex flex-wrap items-center gap-x-1 gap-y-1.5 border-t border-border/60 px-5 py-3.5 text-[13px] sm:px-7">
-          <span className="mr-2 text-muted-foreground">Por etapa</span>
-          {stageCounts.map((s, i) => (
-            <span key={s.id} className="inline-flex items-center gap-1">
-              {i > 0 && (
-                <span className="mx-1 text-muted-foreground/40" aria-hidden>
-                  ·
-                </span>
-              )}
-              <span className="text-muted-foreground">
-                {STAGE_SHORT[s.id] ?? s.label}
-              </span>
-              <span className="font-semibold tabular-nums text-foreground">
-                {s.count}
-              </span>
-            </span>
-          ))}
-        </div>
-
-        {/* Deal rows */}
-        <div className="border-t border-border/60">
-          {deals.slice(0, 4).map((deal) => (
-            <Link
-              key={deal.id}
-              href="/deals"
-              className="group flex items-center gap-3 border-b border-border/50 px-5 py-4 last:border-b-0 transition-colors hover:bg-muted/35 sm:px-7"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-[15px] font-medium tracking-tight">
-                  {deal.address}
-                </p>
-                <p className="mt-0.5 text-sm text-muted-foreground">
-                  {deal.city} · {formatCompact(deal.askingPrice)} · ROI{" "}
-                  <span className="tabular-nums">{deal.roi}%</span>
-                </p>
-              </div>
-              <StageChip stage={deal.stage} />
-              <ArrowUpRight className="size-3.5 shrink-0 text-muted-foreground/40 transition-colors group-hover:text-foreground" />
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Network pulse — one quiet strip, not competing tiles ─────── */}
+      {/* ── Network pulse ─────────────────────────────────────────────── */}
       <Link
         href="/comparables"
-        className="group flex flex-wrap items-center justify-between gap-3 rounded-xl px-1 py-1 outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40"
+        className="group flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-muted/55 px-5 py-4 outline-none transition-colors hover:bg-muted/80 focus-visible:ring-2 focus-visible:ring-ring/40 sm:px-6"
       >
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm">
-          <span className="font-medium text-foreground">Red esta semana</span>
-          <span className="text-muted-foreground">
-            <span className="tabular-nums text-foreground">
-              {marketStats.cashDealsThisMonth}
-            </span>{" "}
-            cash deals
-            <span className="mx-1.5 text-muted-foreground/40">·</span>
-            <span className="tabular-nums text-foreground">
-              +{marketStats.newThisWeek}
-            </span>{" "}
-            comps
-            <span className="mx-1.5 text-muted-foreground/40">·</span>
-            <span className="tabular-nums text-foreground">
-              {formatNumber(marketStats.totalComparables)}
-            </span>{" "}
-            en base
-            <span className="mx-1.5 text-muted-foreground/40">·</span>
-            {marketStats.municipalities} municipios
-          </span>
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-foreground">Red esta semana</p>
+          <div className="mt-2 flex flex-wrap items-baseline gap-x-5 gap-y-2">
+            <NetworkStat
+              value={String(marketStats.cashDealsThisMonth)}
+              label="cash deals"
+              accent="cash"
+            />
+            <NetworkStat
+              value={`+${marketStats.newThisWeek}`}
+              label="comps"
+            />
+            <NetworkStat
+              value={formatNumber(marketStats.totalComparables)}
+              label="en base"
+            />
+            <NetworkStat
+              value={String(marketStats.municipalities)}
+              label="municipios"
+            />
+          </div>
         </div>
         <span className="inline-flex items-center gap-1 text-sm font-medium text-primary group-hover:text-primary/80">
           Explorar
@@ -263,8 +214,59 @@ export default function DashboardPage() {
           </Link>
         </div>
 
-        <div className="overflow-hidden rounded-2xl ring-1 ring-foreground/5 dark:ring-foreground/10">
-          <div className="hidden grid-cols-[minmax(0,1.4fr)_repeat(4,minmax(0,0.7fr))_88px] gap-3 border-b border-border/60 px-5 py-3 text-xs text-muted-foreground sm:grid sm:px-6">
+        {hottestZone && (
+          <Link
+            href={`/comparables?zona=${hottestZone.id}`}
+            className="group mb-3 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-card px-5 py-4 shadow-card outline-none transition-colors hover:bg-muted/25 focus-visible:ring-2 focus-visible:ring-ring/40 sm:px-6"
+          >
+            <div className="min-w-0">
+              <p className="text-[11px] font-medium text-muted-foreground">
+                Mayor momentum entre tus zonas
+              </p>
+              <p className="mt-1 font-heading text-lg font-semibold tracking-tight">
+                {hottestZone.name}
+                <span className="ml-2 text-sm font-medium text-muted-foreground">
+                  {hottestZone.city}
+                </span>
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                <span className="font-semibold tabular-nums text-foreground">
+                  ${hottestZone.medianPpsf}/pc
+                </span>
+                <span className="mx-1.5 text-muted-foreground/40">·</span>
+                DOM {hottestZone.avgDom}d
+                <span className="mx-1.5 text-muted-foreground/40">·</span>
+                {hottestZone.cashShare}% cash
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <p
+                  className={cn(
+                    "inline-flex items-center gap-1 font-heading text-2xl font-bold tabular-nums tracking-tight",
+                    hottestZone.yoyChange >= 0 ? "text-success" : "text-warning"
+                  )}
+                >
+                  {hottestZone.yoyChange >= 0 ? (
+                    <TrendingUp className="size-5" aria-hidden />
+                  ) : (
+                    <TrendingDown className="size-5" aria-hidden />
+                  )}
+                  {formatSigned(hottestZone.yoyChange)}
+                </p>
+                <p className="text-[11px] text-muted-foreground">YoY</p>
+              </div>
+              <Sparkline
+                data={hottestZone.trend}
+                id={`hot-${hottestZone.id}`}
+                className="h-12 w-28"
+              />
+            </div>
+          </Link>
+        )}
+
+        <div className="overflow-hidden rounded-2xl shadow-card">
+          <div className="hidden grid-cols-[minmax(0,1.4fr)_repeat(4,minmax(0,0.7fr))_96px] gap-3 border-b border-border/60 px-5 py-3 text-xs text-muted-foreground sm:grid sm:px-6">
             <span>Zona</span>
             <span className="text-right">$/pc</span>
             <span className="text-right">YoY</span>
@@ -277,11 +279,15 @@ export default function DashboardPage() {
             {pulseZones.map((z) => {
               if (!z) return null
               const positive = z.yoyChange >= 0
+              const isHot = hottestZone?.id === z.id
               return (
                 <Link
                   key={z.id}
                   href={`/comparables?zona=${z.id}`}
-                  className="group grid grid-cols-1 gap-2 border-b border-border/50 px-5 py-4 last:border-b-0 transition-colors hover:bg-muted/35 sm:grid-cols-[minmax(0,1.4fr)_repeat(4,minmax(0,0.7fr))_88px] sm:items-center sm:gap-3 sm:px-6"
+                  className={cn(
+                    "group grid grid-cols-1 gap-2 border-b border-border/50 px-5 py-4 last:border-b-0 transition-colors hover:bg-muted/35 sm:grid-cols-[minmax(0,1.4fr)_repeat(4,minmax(0,0.7fr))_96px] sm:items-center sm:gap-3 sm:px-6",
+                    isHot && "bg-accent/30"
+                  )}
                 >
                   <div className="min-w-0">
                     <p className="truncate text-[15px] font-medium tracking-tight">
@@ -305,8 +311,10 @@ export default function DashboardPage() {
                     </span>
                     <span
                       className={cn(
-                        "inline-flex items-center gap-0.5 text-sm font-semibold tabular-nums",
-                        positive ? "text-success" : "text-warning"
+                        "inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-sm font-semibold tabular-nums",
+                        positive
+                          ? "bg-success-soft text-success"
+                          : "bg-warning-soft text-warning"
                       )}
                     >
                       {positive ? (
@@ -340,7 +348,7 @@ export default function DashboardPage() {
                     <Sparkline
                       data={z.trend}
                       id={z.id}
-                      className="h-8 w-[72px]"
+                      className="h-9 w-[88px]"
                     />
                   </div>
                 </Link>
@@ -362,53 +370,95 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          <div className="border-t border-border/60">
-            {opportunities.map(({ kind, property: p }) => (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => router.push("/comparables")}
-                className="group flex w-full items-center gap-3 border-b border-border/50 py-4 text-left transition-colors outline-none hover:bg-muted/30 focus-visible:bg-muted/30"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    {kind === "cash" ? (
-                      <SourceChip source="cash" verified={p.verified} />
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-                        <span
-                          className="size-1.5 rounded-full bg-primary animate-pulse-dot"
-                          aria-hidden
-                        />
-                        Recién listada · {p.daysOnMarket}d
-                      </span>
-                    )}
-                    <span className="text-sm text-muted-foreground">
-                      {p.city}
-                    </span>
-                  </div>
-                  <p className="mt-1.5 truncate text-[15px] font-medium tracking-tight">
-                    {p.address}
-                  </p>
-                  <p className="mt-0.5 text-sm text-muted-foreground">
-                    {formatCurrency(p.price)} · ${p.pricePerSqFt}/pc
-                    {kind === "cash" && p.estimatedRent
-                      ? ` · renta est. ${formatCurrency(p.estimatedRent)}/mes`
-                      : ""}
-                  </p>
-                </div>
-                <ArrowUpRight
+          <div className="overflow-hidden rounded-2xl shadow-card">
+            {opportunities.map(({ kind, property: p }) => {
+              const drop =
+                p.originalPrice && p.originalPrice > p.price
+                  ? Math.round(
+                      ((p.originalPrice - p.price) / p.originalPrice) * 100
+                    )
+                  : null
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => router.push("/comparables")}
                   className={cn(
-                    "size-4 shrink-0 text-muted-foreground/40 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-foreground",
-                    kind === "cash" && "group-hover:text-cash"
+                    "group flex w-full items-center gap-3 border-b border-border/50 px-5 py-4 text-left transition-colors outline-none last:border-b-0 hover:bg-muted/35 focus-visible:bg-muted/35 sm:px-6",
+                    kind === "cash" && "bg-cash-soft/40 hover:bg-cash-soft/60"
                   )}
-                />
-              </button>
-            ))}
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      {kind === "cash" ? (
+                        <SourceChip source="cash" verified={p.verified} />
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                          <span
+                            className="size-1.5 rounded-full bg-primary animate-pulse-dot"
+                            aria-hidden
+                          />
+                          Recién listada · {p.daysOnMarket}d
+                        </span>
+                      )}
+                      {drop !== null && (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-success">
+                          <TrendingDown className="size-3" />
+                          Bajó {drop}%
+                        </span>
+                      )}
+                      <span className="text-sm text-muted-foreground">
+                        {p.city}
+                      </span>
+                    </div>
+                    <p className="mt-1.5 truncate text-[15px] font-medium tracking-tight">
+                      {p.address}
+                    </p>
+                    <p className="mt-0.5 text-sm text-muted-foreground">
+                      <span className="font-medium tabular-nums text-foreground">
+                        {formatCurrency(p.price)}
+                      </span>
+                      <span className="mx-1.5 text-muted-foreground/40">·</span>
+                      ${p.pricePerSqFt}/pc
+                      {p.estimatedRent > 0 && (
+                        <>
+                          <span className="mx-1.5 text-muted-foreground/40">
+                            ·
+                          </span>
+                          renta est. {formatCurrency(p.estimatedRent)}/mes
+                        </>
+                      )}
+                    </p>
+                  </div>
+                  <div className="hidden shrink-0 text-right sm:block">
+                    {p.estimatedRent > 0 && p.price > 0 && (
+                      <>
+                        <p className="font-heading text-sm font-semibold tabular-nums">
+                          {(
+                            ((p.estimatedRent * 12) / p.price) *
+                            100
+                          ).toFixed(1)}
+                          %
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">
+                          cap est.
+                        </p>
+                      </>
+                    )}
+                  </div>
+                  <ArrowUpRight
+                    className={cn(
+                      "size-4 shrink-0 text-muted-foreground/40 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-foreground",
+                      kind === "cash" && "group-hover:text-cash"
+                    )}
+                  />
+                </button>
+              )
+            })}
           </div>
         </section>
 
-        <div className="flex flex-col gap-10 lg:col-span-5">
+        <div className="flex flex-col gap-8 lg:col-span-5">
           <section>
             <div className="mb-4">
               <h3 className="font-heading text-base font-semibold tracking-tight">
@@ -418,11 +468,11 @@ export default function DashboardPage() {
                 Reportes de realtors e inversionistas
               </p>
             </div>
-            <ul className="border-t border-border/60">
+            <ul className="overflow-hidden rounded-2xl shadow-card">
               {recentActivity.slice(0, 5).map((a) => (
                 <li
                   key={a.id}
-                  className="flex items-start gap-3 border-b border-border/50 py-3.5"
+                  className="flex items-start gap-3 border-b border-border/50 px-5 py-3.5 last:border-b-0 sm:px-5"
                 >
                   <span
                     className={cn(
@@ -448,25 +498,38 @@ export default function DashboardPage() {
             </ul>
           </section>
 
-          <div className="flex items-start gap-3.5 rounded-2xl bg-muted/50 px-5 py-4">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-background text-foreground/70 ring-1 ring-foreground/5">
-              <Calculator className="size-4" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold">¿Vale la pena el deal?</p>
-              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                Precio y renta en 30 segundos: cap rate, cash flow y break-even
-                en palabras sencillas.
-              </p>
-              <Button
-                size="sm"
-                variant="outline"
-                className="mt-3 rounded-lg"
-                onClick={() => router.push("/calculadora")}
-              >
-                Abrir calculadora
-                <ArrowRight className="size-3.5" />
-              </Button>
+          <div className="rounded-2xl bg-card px-5 py-5 shadow-card">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-accent px-2.5 py-1 text-[11px] font-semibold text-accent-foreground">
+                  <Calculator className="size-3.5" />
+                  Calculadora ROI
+                </span>
+                <p className="mt-2.5 text-sm font-semibold tracking-tight">
+                  ¿Vale la pena el deal?
+                </p>
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                  Cap rate, cash flow y break-even en palabras sencillas. 30
+                  segundos.
+                </p>
+                <Button
+                  size="sm"
+                  className="mt-3.5 rounded-lg"
+                  onClick={() => router.push("/calculadora")}
+                >
+                  Abrir calculadora
+                  <ArrowRight className="size-3.5" />
+                </Button>
+              </div>
+              <div className="hidden shrink-0 text-right sm:block">
+                <p className="text-[11px] text-muted-foreground">Ejemplo</p>
+                <p className="font-heading text-2xl font-bold tracking-tight tabular-nums">
+                  $1,223
+                  <span className="text-sm font-medium text-muted-foreground">
+                    /mes
+                  </span>
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -475,30 +538,42 @@ export default function DashboardPage() {
   )
 }
 
-const STAGE_SHORT: Record<string, string> = {
-  prospecto: "Prospecto",
-  analisis: "Análisis",
-  oferta: "Oferta",
-  negociacion: "Negoc.",
-  "due-diligence": "Due dil.",
-  cierre: "Cierre",
-}
-
-export function StageChip({ stage }: { stage: string }) {
-  const idx = dealStages.findIndex((s) => s.id === stage)
-  const label = dealStages.find((s) => s.id === stage)?.label ?? stage
+function NetworkStat({
+  value,
+  label,
+  accent,
+}: {
+  value: string
+  label: string
+  accent?: "cash"
+}) {
   return (
-    <span
-      className={cn(
-        "shrink-0 rounded-md px-2 py-0.5 text-[11px] font-medium",
-        idx >= 4
-          ? "bg-success-soft text-success"
-          : idx >= 2
-            ? "bg-warning-soft text-warning"
-            : "bg-muted text-muted-foreground"
-      )}
-    >
-      {label}
+    <span className="inline-flex items-baseline gap-1.5">
+      <span
+        className={cn(
+          "font-heading text-lg font-bold tabular-nums tracking-tight",
+          accent === "cash" ? "text-cash" : "text-foreground"
+        )}
+      >
+        {value}
+      </span>
+      <span className="text-sm text-muted-foreground">{label}</span>
     </span>
   )
 }
+
+function pickFocusDeal(activeDeals: Deal[]): Deal | undefined {
+  if (activeDeals.length === 0) return undefined
+  return [...activeDeals].sort((a, b) => {
+    const stageDiff =
+      (STAGE_INDEX[b.stage] ?? 0) - (STAGE_INDEX[a.stage] ?? 0)
+    if (stageDiff !== 0) return stageDiff
+    if (a.nextStep && !b.nextStep) return -1
+    if (!a.nextStep && b.nextStep) return 1
+    if (b.roi !== a.roi) return b.roi - a.roi
+    return (b.cashFlow || 0) - (a.cashFlow || 0)
+  })[0]
+}
+
+/** Re-export for any old imports */
+export { StageChip } from "@/components/dashboard/pipeline-hero"
