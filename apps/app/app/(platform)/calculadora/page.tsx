@@ -24,6 +24,8 @@ import {
 } from "recharts"
 
 import { formatCurrency, zoneById } from "@cancel/data"
+
+import { PageHeader } from "@/components/page-header"
 import {
   Button,
   Card,
@@ -203,7 +205,12 @@ export default function CalculadoraPage() {
   ])
 
   return (
-    <div className="space-y-5 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
+      <PageHeader
+        title="Calculadora ROI"
+        description="Cap rate, cash flow y break-even al instante"
+      />
+
       {/* Banner de prefill */}
       {prefill?.address && (
         <div className="flex items-center justify-between gap-3 rounded-2xl bg-muted px-4 py-3">
@@ -226,16 +233,16 @@ export default function CalculadoraPage() {
       )}
 
       <Tabs value={mode} onValueChange={(v) => setMode(v as CalcMode)}>
-        <TabsList className="w-full sm:w-auto">
-          <TabsTrigger value="alquiler" className="flex-1 sm:flex-none">
+        <TabsList>
+          <TabsTrigger value="alquiler" className="flex-none px-3.5">
             <Building className="size-4" />
             Alquiler
           </TabsTrigger>
-          <TabsTrigger value="flip" className="flex-1 sm:flex-none">
+          <TabsTrigger value="flip" className="flex-none px-3.5">
             <TrendingUp className="size-4" />
             Flip
           </TabsTrigger>
-          <TabsTrigger value="airbnb" className="flex-1 sm:flex-none">
+          <TabsTrigger value="airbnb" className="flex-none px-3.5">
             <Palmtree className="size-4" />
             Airbnb
           </TabsTrigger>

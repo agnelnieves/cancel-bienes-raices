@@ -15,6 +15,8 @@ import {
 import { toast } from "sonner"
 
 import { formatCurrency, type CreditCard } from "@cancel/data"
+
+import { PageHeader } from "@/components/page-header"
 import {
   Accordion,
   AccordionContent,
@@ -129,7 +131,12 @@ export default function CreditoPage() {
   const globalTone = utilTone(totals.util)
 
   return (
-    <div className="space-y-5 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
+      <PageHeader
+        title="Planificador de crédito"
+        description="Utilización estratégica de tus líneas"
+      />
+
       {/* Resumen — veredicto primero */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <SummaryCard label="Crédito total" value={formatCurrency(totals.limit)} sub={`${cards.length} líneas`} />

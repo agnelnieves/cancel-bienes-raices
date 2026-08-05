@@ -25,6 +25,7 @@ import {
   cn,
 } from "@cancel/ui"
 
+import { PageHeader } from "@/components/page-header"
 import { useUserStore } from "@/lib/stores/user"
 
 export default function ConfiguracionPage() {
@@ -51,7 +52,12 @@ export default function ConfiguracionPage() {
   ]
 
   return (
-    <div className="mx-auto max-w-2xl space-y-5 animate-fade-in">
+    <div className="mx-auto max-w-2xl space-y-6 animate-fade-in">
+      <PageHeader
+        title="Configuración"
+        description="Tu cuenta y preferencias"
+      />
+
       {/* Perfil */}
       <Card className="shadow-card">
         <CardHeader>

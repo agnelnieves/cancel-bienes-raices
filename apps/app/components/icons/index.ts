@@ -1,5 +1,6 @@
 export { HomeIcon } from "./home"
 export { SearchIcon } from "./search"
+export { MapIcon } from "./map"
 export { ChartColumnIncreasingIcon } from "./chart-column-increasing"
 export { ConstructionIcon } from "./construction"
 export { FolderKanbanIcon } from "./folder-kanban"

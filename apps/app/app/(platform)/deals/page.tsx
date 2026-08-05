@@ -33,6 +33,7 @@ import {
   type Deal,
   type DealStage,
 } from "@cancel/data"
+import { PageHeader } from "@/components/page-header"
 import {
   Badge,
   Button,
@@ -155,7 +156,18 @@ export default function DealsPage() {
   )
 
   return (
-    <div className="space-y-5 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
+      <PageHeader
+        title="Deal Tracker"
+        description="Tu pipeline de prospecto a cierre"
+        actions={
+          <Button size="sm" className="rounded-lg" onClick={() => setAddOpen(true)}>
+            <Plus className="size-3.5" />
+            Nuevo deal
+          </Button>
+        }
+      />
+
       {/* Stats — separate cards with tiny per-card sparklines */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <StatCard
@@ -186,15 +198,9 @@ export default function DealsPage() {
         />
       </div>
 
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-[13px] text-muted-foreground">
-          Arrastra cada tarjeta a la etapa del deal
-        </p>
-        <Button size="sm" onClick={() => setAddOpen(true)}>
-          <Plus className="size-3.5" />
-          Nuevo deal
-        </Button>
-      </div>
+      <p className="text-[13px] text-muted-foreground">
+        Arrastra cada tarjeta a la etapa del deal
+      </p>
 
       {/* Kanban */}
       <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>

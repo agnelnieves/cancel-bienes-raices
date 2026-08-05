@@ -17,6 +17,7 @@ import {
 } from "lucide-react"
 
 import { ConstructionIcon } from "@/components/icons"
+import { PageHeader } from "@/components/page-header"
 import { toast } from "sonner"
 
 import {
@@ -99,7 +100,12 @@ function ContratistasInner() {
   const contact = contractors.find((c) => c.id === contactId)
 
   return (
-    <div className="space-y-5 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
+      <PageHeader
+        title="Red de contratistas"
+        description="Profesionales vetados por la comunidad"
+      />
+
       {/* Proceso de vetting */}
       <div className="grid gap-3 sm:grid-cols-3">
         {[

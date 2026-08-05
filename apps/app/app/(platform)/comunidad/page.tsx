@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 
 import { MessageCircleDashedIcon } from "@/components/icons"
+import { PageHeader } from "@/components/page-header"
 import { toast } from "sonner"
 
 import {
@@ -115,7 +116,13 @@ export default function ComunidadPage() {
   const activeChannel = channels.find((c) => c.id === channel)
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[200px_1fr] xl:grid-cols-[220px_1fr_240px] animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
+      <PageHeader
+        title="Comunidad"
+        description="Los inversionistas de la red"
+      />
+
+      <div className="grid gap-5 lg:grid-cols-[200px_1fr] xl:grid-cols-[220px_1fr_240px]">
       {/* Canales */}
       <aside className="space-y-1 max-lg:flex max-lg:gap-1.5 max-lg:scroll-fade-x max-lg:overflow-x-auto max-lg:pb-1">
         {channels.map((c) => {
@@ -364,6 +371,7 @@ export default function ComunidadPage() {
           </CardContent>
         </Card>
       </aside>
+      </div>
     </div>
   )
 }

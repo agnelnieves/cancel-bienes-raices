@@ -13,7 +13,6 @@ import {
   useShellStore,
 } from "@/lib/stores/shell"
 import { useUserStore } from "@/lib/stores/user"
-import { Header } from "./header"
 import { Logo } from "./logo"
 import { MobileNav, Sidebar } from "./sidebar"
 
@@ -91,13 +90,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             : "min-h-dvh lg:min-h-[calc(100dvh-1rem)]"
         )}
       >
-        <Header />
         {fullBleed ? (
-          <main className="relative min-h-0 flex-1 overflow-hidden max-lg:pb-16 lg:rounded-b-xl">
+          <main className="relative min-h-0 flex-1 overflow-hidden max-lg:pb-16 lg:rounded-xl">
             {children}
           </main>
         ) : (
-          <main className="mx-auto w-full max-w-[1200px] flex-1 px-4 pt-6 pb-24 sm:px-6 lg:px-8 lg:pb-12">
+          <main className="mx-auto w-full max-w-[1200px] flex-1 px-4 pt-8 pb-24 sm:px-6 lg:px-8 lg:pt-10 lg:pb-12 lg:rounded-xl">
             {children}
           </main>
         )}

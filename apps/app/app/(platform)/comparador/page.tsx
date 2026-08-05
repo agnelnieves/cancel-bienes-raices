@@ -35,6 +35,7 @@ import {
   cn,
 } from "@cancel/ui"
 
+import { PageHeader } from "@/components/page-header"
 import { useSavedStore, MAX_COMPARE } from "@/lib/stores/saved"
 
 const CONDITION_SCORE: Record<string, number> = {
@@ -173,7 +174,12 @@ export default function ComparadorPage() {
   ]
 
   return (
-    <div className="space-y-5 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
+      <PageHeader
+        title="Comparador"
+        description="Hasta 5 propiedades lado a lado con scoring"
+      />
+
       {/* Veredicto primero — la recomendación en español llano */}
       {best && (
         <Card className="border-success/30 bg-success-soft/60 shadow-card">

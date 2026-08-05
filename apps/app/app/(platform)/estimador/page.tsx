@@ -21,6 +21,7 @@ import {
   cn,
 } from "@cancel/ui"
 
+import { PageHeader } from "@/components/page-header"
 import { useAnalysisStore } from "@/lib/stores/analysis"
 
 // ---------------------------------------------------------------------------
@@ -110,7 +111,13 @@ export default function EstimadorPage() {
   }
 
   return (
-    <div className="grid gap-5 lg:grid-cols-5 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
+      <PageHeader
+        title="Estimador de remodelación"
+        description="Presupuesto por partida con precios de PR"
+      />
+
+      <div className="grid gap-5 lg:grid-cols-5">
       {/* ------------------------------ Configuración ------------------------------ */}
       <div className="space-y-4 lg:col-span-3">
         <Card>
@@ -346,6 +353,7 @@ export default function EstimadorPage() {
           Precios de referencia con mano de obra de PR (2026). Consigue siempre
           2–3 cotizaciones de contratistas.
         </p>
+      </div>
       </div>
     </div>
   )
