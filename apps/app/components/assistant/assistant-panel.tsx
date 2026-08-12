@@ -241,11 +241,6 @@ export function AssistantPanel({
         <motion.form
           ref={formRef}
           layout
-          // Motion owns borderRadius here: during a `layout` animation it
-          // injects an inline radius correction that would override a Tailwind
-          // `rounded-*` class (making the radius snap), so we animate it
-          // explicitly instead of via CSS.
-          animate={{ borderRadius: multiline ? 22 : 9999 }}
           transition={
             reduceMotion
               ? { duration: 0 }
@@ -255,7 +250,10 @@ export function AssistantPanel({
             e.preventDefault()
             send()
           }}
-          className="relative flex flex-wrap items-center justify-between gap-1.5 border border-input bg-card p-1.5 shadow-soft transition-colors duration-300 focus-within:border-ring/60"
+          // One constant radius for both inline and stacked — matching it
+          // exactly kills the snap that came from animating borderRadius
+          // alongside a `layout` transform (the two fought over timing).
+          className="relative flex flex-wrap items-center justify-between gap-1.5 rounded-[22px] border border-input bg-card p-1.5 shadow-soft transition-colors duration-300 focus-within:border-ring/60"
         >
           {/* Hidden mirror: measures wrap at the fixed inline text width. */}
           <div
@@ -287,7 +285,14 @@ export function AssistantPanel({
 
           <motion.textarea
             ref={inputRef}
-            layout
+            // Position-only: a full `layout` animation scales the element via
+            // a CSS transform while it resizes, and a native <textarea>'s text
+            // rendering visibly stretches/squishes during that scale (you can
+            // see the glyphs distort before the size correction snaps them
+            // back). "position" only translates the element, never scales it,
+            // so the height itself is instead grown smoothly below via a
+            // plain CSS transition on the JS-driven inline height.
+            layout="position"
             transition={
               reduceMotion
                 ? { duration: 0 }
@@ -305,6 +310,7 @@ export function AssistantPanel({
             }}
             placeholder="Busca comparables, calcula ROI…"
             rows={1}
+            style={{ transition: reduceMotion ? "none" : "height 0.3s cubic-bezier(0.32, 0.72, 0, 1)" }}
             className={cn(
               "max-h-[148px] min-h-9 resize-none bg-transparent px-1.5 py-1.5 text-sm leading-6 outline-none placeholder:text-muted-foreground",
               scrolls ? "scroll-fade-y overflow-y-auto" : "overflow-hidden",
