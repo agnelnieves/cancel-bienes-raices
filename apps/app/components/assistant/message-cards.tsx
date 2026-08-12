@@ -93,7 +93,7 @@ function PropertyRow({ property: p }: { property: Property }) {
         </span>
       </div>
 
-      <div className="mt-2.5 flex gap-1.5">
+      <div className="mt-2.5 flex flex-wrap gap-1.5">
         <Button
           size="xs"
           variant={saved ? "secondary" : "outline"}

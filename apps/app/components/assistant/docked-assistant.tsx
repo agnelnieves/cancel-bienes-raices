@@ -17,43 +17,53 @@ const EASE = [0.32, 0.72, 0, 1] as const
 const DURATION = 0.3
 
 /**
- * The assistant as a column beside the content, inset the same way as the
- * main panel (rounded, shadow-inset-panel) — sharing the bg-sidebar canvas.
- * Width animates open/closed instead of the panel being overlaid.
+ * The assistant as a column beside the content — mirrors the left rail's own
+ * "gap spacer + fixed panel" split (see sidebar-gap / sidebar-container in
+ * sidebar.tsx). The fixed panel is pinned to the viewport (`h-svh`), so its
+ * height NEVER depends on how tall the main content column is — only the
+ * conversation scrolls internally. The gap is an in-flow spacer that just
+ * reserves room for it in the layout.
  */
 export function DockedAssistant({ controller }: { controller: AssistantController }) {
   const { open, setOpen } = controller
   const reduce = useReducedMotion()
+  const width = open ? ASSISTANT_DOCK_WIDTH : 0
+  const transition = reduce ? { duration: 0 } : { duration: DURATION, ease: EASE }
 
   return (
-    <motion.div
-      data-slot="assistant-dock"
-      initial={false}
-      animate={{ width: open ? ASSISTANT_DOCK_WIDTH : 0 }}
-      transition={reduce ? { duration: 0 } : { duration: DURATION, ease: EASE }}
-      className="hidden shrink-0 overflow-hidden lg:block"
-      aria-hidden={!open}
-    >
-      <div
-        style={{ width: ASSISTANT_DOCK_WIDTH }}
-        className={cn(
-          "h-full lg:my-2 lg:mr-2 lg:rounded-xl lg:shadow-inset-panel",
-          "lg:min-h-[calc(100dvh-1rem)]"
-        )}
+    <>
+      <motion.div
+        data-slot="assistant-gap"
+        className="hidden shrink-0 lg:block"
+        initial={false}
+        animate={{ width }}
+        transition={transition}
+        aria-hidden
+      />
+
+      <motion.div
+        data-slot="assistant-container"
+        initial={false}
+        animate={{ width }}
+        transition={transition}
+        className="fixed inset-y-0 right-0 z-30 hidden h-svh overflow-hidden p-2 lg:block"
+        aria-hidden={!open}
       >
-        <AssistantPanel
-          controller={controller}
-          onRequestClose={() => setOpen(false)}
-          headerActions={
-            <>
-              <HistoryMenu />
-              <DockModeMenu />
-            </>
-          }
-          autoFocus={open}
-          className="lg:rounded-xl"
-        />
-      </div>
-    </motion.div>
+        <div style={{ width: ASSISTANT_DOCK_WIDTH }} className="h-full">
+          <AssistantPanel
+            controller={controller}
+            onRequestClose={() => setOpen(false)}
+            headerActions={
+              <>
+                <HistoryMenu />
+                <DockModeMenu />
+              </>
+            }
+            autoFocus={open}
+            className={cn("lg:rounded-xl lg:shadow-inset-panel")}
+          />
+        </div>
+      </motion.div>
+    </>
   )
 }

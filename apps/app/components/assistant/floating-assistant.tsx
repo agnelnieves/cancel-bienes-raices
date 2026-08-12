@@ -125,12 +125,15 @@ export function FloatingAssistant({ controller }: { controller: AssistantControl
         "fixed z-50 flex flex-col overflow-hidden rounded-2xl bg-background shadow-lift ring-1 ring-border"
       )}
     >
-      {/* Drag handle strip */}
-      <div
-        onPointerDown={(e) => dragControls.start(e)}
-        className="absolute inset-x-0 top-0 z-20 flex h-9 cursor-grab items-center justify-center active:cursor-grabbing"
-      >
-        <GripHorizontal className="size-3.5 text-muted-foreground/40" />
+      {/* Drag handle — a small centered grip, not the full header strip, so
+          the history/dock-mode/clear/close buttons beside it stay clickable. */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex h-9 items-center justify-center">
+        <div
+          onPointerDown={(e) => dragControls.start(e)}
+          className="pointer-events-auto flex h-6 w-16 cursor-grab items-center justify-center rounded-full active:cursor-grabbing"
+        >
+          <GripHorizontal className="size-3.5 text-muted-foreground/40" />
+        </div>
       </div>
       <AssistantPanel
         controller={controller}

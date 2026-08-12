@@ -69,7 +69,12 @@ export function AssistantPanel({
   }, [])
 
   return (
-    <div className={cn("flex h-full min-h-0 flex-col bg-background", className)}>
+    <div
+      className={cn(
+        "flex h-full min-h-0 flex-col bg-sidebar text-sidebar-foreground",
+        className
+      )}
+    >
       {/* Header — no border; the scroller's own fade dissolves content under it */}
       <div className="relative z-10 flex shrink-0 items-center justify-between gap-2 px-5 py-4">
         <div className="flex min-w-0 items-center gap-2.5">
@@ -200,8 +205,8 @@ function MessageBubble({ message: m }: { message: AssistantMessage }) {
   }
 
   return (
-    <div className="animate-fade-in">
-      <div className="max-w-full rounded-2xl rounded-bl-md border border-border bg-muted/50 px-4 py-3 text-sm leading-relaxed text-foreground/90">
+    <div className="max-w-full animate-fade-in">
+      <div className="min-w-0 text-sm leading-relaxed text-foreground/90">
         {/* Pasos de pensamiento */}
         {m.thinking && m.thinking.length > 0 && (
           <div className="space-y-1">
