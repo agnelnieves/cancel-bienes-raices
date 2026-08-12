@@ -37,6 +37,9 @@ export function AssistantPanel({
   const scrollRef = React.useRef<HTMLDivElement>(null)
   const endRef = React.useRef<HTMLDivElement>(null)
   const [showJump, setShowJump] = React.useState(false)
+  // Once the composer wraps past one line, the toolbar (+/send) drops to its
+  // own row below the text instead of hugging the last visible line.
+  const [multiline, setMultiline] = React.useState(false)
 
   React.useEffect(() => {
     if (open && autoFocus) {
@@ -51,6 +54,7 @@ export function AssistantPanel({
     if (!el) return
     el.style.height = "auto"
     el.style.height = `${Math.min(el.scrollHeight, 148)}px`
+    setMultiline(el.scrollHeight > 44)
   }, [input])
 
   // Stick to the bottom on new content — unless the user has scrolled up to
@@ -171,15 +175,21 @@ export function AssistantPanel({
         </button>
       </div>
 
-      {/* Input — a pill that grows into a rounded rect as text wraps, with
-          the plus/send controls pinned to the bottom corners. */}
+      {/* Input — a pill that grows into a rounded rect as text wraps. The
+          textarea never unmounts across the transition (only utility
+          classes + flex "order" change), so focus/caret survive it: when
+          `multiline`, the textarea takes basis-full and forces the plus/send
+          buttons onto their own wrapped row underneath via flex-wrap. */}
       <div className="shrink-0 px-4 pb-4 pt-1">
         <form
           onSubmit={(e) => {
             e.preventDefault()
             send()
           }}
-          className="flex items-end gap-1.5 rounded-[28px] border border-input bg-card p-1.5 shadow-soft transition-colors focus-within:border-ring/60"
+          className={cn(
+            "flex flex-wrap justify-between gap-1.5 border border-input bg-card p-1.5 shadow-soft transition-colors focus-within:border-ring/60",
+            multiline ? "items-end rounded-[22px]" : "items-center rounded-full"
+          )}
         >
           <Button
             type="button"
@@ -187,7 +197,10 @@ export function AssistantPanel({
             size="icon"
             disabled
             title="Adjuntar (próximamente)"
-            className="size-9 shrink-0 rounded-full text-muted-foreground/60 disabled:opacity-100"
+            className={cn(
+              "size-9 shrink-0 rounded-full text-muted-foreground/60 disabled:opacity-100",
+              multiline && "order-2"
+            )}
           >
             <Plus className="size-4" />
           </Button>
@@ -205,14 +218,17 @@ export function AssistantPanel({
             }}
             placeholder="Busca comparables, calcula ROI…"
             rows={1}
-            className="max-h-[148px] min-h-9 flex-1 resize-none self-center bg-transparent px-1.5 py-1.5 text-sm leading-6 outline-none placeholder:text-muted-foreground"
+            className={cn(
+              "max-h-[148px] min-h-9 resize-none bg-transparent px-1.5 py-1.5 text-sm leading-6 outline-none placeholder:text-muted-foreground",
+              multiline ? "order-1 basis-full" : "flex-1 self-center"
+            )}
           />
           <Button
             type="submit"
             size="icon"
             disabled={!input.trim()}
             aria-label="Enviar"
-            className="size-9 shrink-0 rounded-full"
+            className={cn("size-9 shrink-0 rounded-full", multiline && "order-3")}
           >
             <ArrowUp className="size-4" />
           </Button>
