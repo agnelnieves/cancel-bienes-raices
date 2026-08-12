@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ArrowDown, Eraser, SendHorizonal, Sparkles, X } from "lucide-react"
+import { ArrowDown, ArrowUp, Eraser, Plus, Sparkles, X } from "lucide-react"
 
 import { Button, cn } from "@cancel/ui"
 
@@ -33,7 +33,7 @@ export function AssistantPanel({
 }: AssistantPanelProps) {
   const { open, messages, clear, input, setInput, send, suggestions, firstName } =
     controller
-  const inputRef = React.useRef<HTMLInputElement>(null)
+  const inputRef = React.useRef<HTMLTextAreaElement>(null)
   const scrollRef = React.useRef<HTMLDivElement>(null)
   const endRef = React.useRef<HTMLDivElement>(null)
   const [showJump, setShowJump] = React.useState(false)
@@ -44,6 +44,14 @@ export function AssistantPanel({
       return () => clearTimeout(t)
     }
   }, [open, autoFocus])
+
+  // Auto-grow the composer textarea with its content, capped at ~6 lines.
+  React.useEffect(() => {
+    const el = inputRef.current
+    if (!el) return
+    el.style.height = "auto"
+    el.style.height = `${Math.min(el.scrollHeight, 148)}px`
+  }, [input])
 
   // Stick to the bottom on new content — unless the user has scrolled up to
   // read history, in which case a jump-to-latest pill appears instead.
@@ -163,29 +171,50 @@ export function AssistantPanel({
         </button>
       </div>
 
-      {/* Input — no top border; composer just sits on the same surface */}
+      {/* Input — a pill that grows into a rounded rect as text wraps, with
+          the plus/send controls pinned to the bottom corners. */}
       <div className="shrink-0 px-4 pb-4 pt-1">
         <form
           onSubmit={(e) => {
             e.preventDefault()
             send()
           }}
-          className="flex items-center gap-2"
+          className="flex items-end gap-1.5 rounded-[28px] border border-input bg-card p-1.5 shadow-soft transition-colors focus-within:border-ring/60"
         >
-          <input
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            disabled
+            title="Adjuntar (próximamente)"
+            className="size-9 shrink-0 rounded-full text-muted-foreground/60 disabled:opacity-100"
+          >
+            <Plus className="size-4" />
+          </Button>
+          <textarea
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key !== "Enter" || e.shiftKey) return
+              // Don't submit while a CJK IME is composing (or on Safari's
+              // unreliable final keyCode-229 composition event).
+              if (e.nativeEvent.isComposing || e.keyCode === 229) return
+              e.preventDefault()
+              send()
+            }}
             placeholder="Busca comparables, calcula ROI…"
-            className="h-10 flex-1 rounded-full border border-input bg-transparent px-4 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 dark:bg-input/30"
+            rows={1}
+            className="max-h-[148px] min-h-9 flex-1 resize-none self-center bg-transparent px-1.5 py-1.5 text-sm leading-6 outline-none placeholder:text-muted-foreground"
           />
           <Button
             type="submit"
             size="icon"
             disabled={!input.trim()}
             aria-label="Enviar"
+            className="size-9 shrink-0 rounded-full"
           >
-            <SendHorizonal className="size-4" />
+            <ArrowUp className="size-4" />
           </Button>
         </form>
       </div>
