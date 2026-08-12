@@ -29,6 +29,12 @@ export const useShellStore = create<ShellState>()(
   )
 )
 
+/** Whether the rail should render collapsed right now — either the user
+ *  pinned it that way, or the docked assistant auto-shrank it for space. */
+export function useEffectiveSidebarCollapsed() {
+  return useShellStore((s) => s.sidebarCollapsed || s.assistantAutoCollapse)
+}
+
 /** Expanded / collapsed desktop widths — keep in sync with sidebar + app-shell.
  *  Inset shell: outer canvas is bg-sidebar; main panel floats beside the nav. */
 export const SIDEBAR_WIDTH = 232

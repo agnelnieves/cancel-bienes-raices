@@ -57,6 +57,7 @@ import { usePipelineStore } from "@/lib/stores/pipeline"
 import {
   SIDEBAR_WIDTH,
   SIDEBAR_WIDTH_COLLAPSED,
+  useEffectiveSidebarCollapsed,
   useShellStore,
 } from "@/lib/stores/shell"
 import { useUserStore } from "@/lib/stores/user"
@@ -403,7 +404,7 @@ function NavLink({
 
 export function Sidebar() {
   const pathname = usePathname()
-  const collapsed = useShellStore((s) => s.sidebarCollapsed)
+  const collapsed = useEffectiveSidebarCollapsed()
   const { reduce, spring, label: labelTransition, width: widthTransition } =
     useRailMotion(collapsed)
   const compareCount = useSavedStore((s) => s.compareIds.length)

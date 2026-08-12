@@ -6,10 +6,13 @@ import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@cancel/ui"
 
 import { Assistant } from "@/components/assistant/assistant"
+import { AssistantProvider, useAssistantContext } from "@/components/assistant/assistant-provider"
+import { DockedAssistant } from "@/components/assistant/docked-assistant"
 import { useHydrated } from "@/lib/use-hydrated"
 import {
   SIDEBAR_WIDTH,
   SIDEBAR_WIDTH_COLLAPSED,
+  useEffectiveSidebarCollapsed,
   useShellStore,
 } from "@/lib/stores/shell"
 import { useUserStore } from "@/lib/stores/user"
@@ -25,12 +28,21 @@ const FULL_BLEED = new Set(["/comparables"])
  * and the main surface is a floating rounded panel (`SidebarInset`).
  */
 export function AppShell({ children }: { children: React.ReactNode }) {
+  return (
+    <AssistantProvider>
+      <AppShellLayout>{children}</AppShellLayout>
+    </AssistantProvider>
+  )
+}
+
+function AppShellLayout({ children }: { children: React.ReactNode }) {
   const hydrated = useHydrated()
   const onboarded = useUserStore((s) => s.profile.onboarded)
   const pathname = usePathname()
   const router = useRouter()
-  const collapsed = useShellStore((s) => s.sidebarCollapsed)
+  const collapsed = useEffectiveSidebarCollapsed()
   const toggleSidebar = useShellStore((s) => s.toggleSidebar)
+  const { controller: assistant, isDocked } = useAssistantContext()
   const fullBleed = FULL_BLEED.has(pathname)
   const sidebarW = collapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH
 
@@ -100,6 +112,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </main>
         )}
       </div>
+
+      {isDocked && <DockedAssistant controller={assistant} />}
 
       <MobileNav />
       <Assistant />
