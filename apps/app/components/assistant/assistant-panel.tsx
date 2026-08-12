@@ -94,12 +94,23 @@ export function AssistantPanel({
   }, [input, measure])
 
   // Re-measure when the panel itself is resized (dock ↔ float ↔ mobile).
+  // measure() mutates layout (textarea height + mirror width), so running it
+  // synchronously inside the observer callback re-triggers the observer and
+  // throws "ResizeObserver loop completed with undelivered notifications".
+  // Deferring to the next frame breaks that cycle.
   React.useEffect(() => {
     const form = formRef.current
     if (!form) return
-    const ro = new ResizeObserver(() => measure())
+    let raf = 0
+    const ro = new ResizeObserver(() => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => measure())
+    })
     ro.observe(form)
-    return () => ro.disconnect()
+    return () => {
+      cancelAnimationFrame(raf)
+      ro.disconnect()
+    }
   }, [measure])
 
   // Stick to the bottom on new content — unless the user has scrolled up to
@@ -230,6 +241,11 @@ export function AssistantPanel({
         <motion.form
           ref={formRef}
           layout
+          // Motion owns borderRadius here: during a `layout` animation it
+          // injects an inline radius correction that would override a Tailwind
+          // `rounded-*` class (making the radius snap), so we animate it
+          // explicitly instead of via CSS.
+          animate={{ borderRadius: multiline ? 22 : 9999 }}
           transition={
             reduceMotion
               ? { duration: 0 }
@@ -239,10 +255,7 @@ export function AssistantPanel({
             e.preventDefault()
             send()
           }}
-          className={cn(
-            "relative flex flex-wrap items-center justify-between gap-1.5 border border-input bg-card p-1.5 shadow-soft transition-[border-radius,background-color,border-color] duration-300 focus-within:border-ring/60",
-            multiline ? "rounded-[22px]" : "rounded-full"
-          )}
+          className="relative flex flex-wrap items-center justify-between gap-1.5 border border-input bg-card p-1.5 shadow-soft transition-colors duration-300 focus-within:border-ring/60"
         >
           {/* Hidden mirror: measures wrap at the fixed inline text width. */}
           <div
