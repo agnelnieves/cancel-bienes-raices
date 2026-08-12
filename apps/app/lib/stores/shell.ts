@@ -7,6 +7,10 @@ interface ShellState {
   sidebarCollapsed: boolean
   setSidebarCollapsed: (v: boolean) => void
   toggleSidebar: () => void
+  /** Ephemeral, not persisted — the rail auto-shrinks to icons while the
+   *  docked assistant is open on a viewport too narrow for both. */
+  assistantAutoCollapse: boolean
+  setAssistantAutoCollapse: (v: boolean) => void
 }
 
 export const useShellStore = create<ShellState>()(
@@ -15,8 +19,13 @@ export const useShellStore = create<ShellState>()(
       sidebarCollapsed: false,
       setSidebarCollapsed: (v) => set({ sidebarCollapsed: v }),
       toggleSidebar: () => set({ sidebarCollapsed: !get().sidebarCollapsed }),
+      assistantAutoCollapse: false,
+      setAssistantAutoCollapse: (v) => set({ assistantAutoCollapse: v }),
     }),
-    { name: "cbr-shell" }
+    {
+      name: "cbr-shell",
+      partialize: (s) => ({ sidebarCollapsed: s.sidebarCollapsed }),
+    }
   )
 )
 
@@ -24,3 +33,12 @@ export const useShellStore = create<ShellState>()(
  *  Inset shell: outer canvas is bg-sidebar; main panel floats beside the nav. */
 export const SIDEBAR_WIDTH = 232
 export const SIDEBAR_WIDTH_COLLAPSED = 48
+
+/** Docked assistant column width (desktop, dockMode "sidebar"). */
+export const ASSISTANT_DOCK_WIDTH = 400
+/** Below this, the assistant can't sit docked comfortably next to content —
+ *  the rail auto-collapses to icons to make room. */
+export const ASSISTANT_AUTOCOLLAPSE_QUERY = "(max-width: 1279px)"
+/** Below this, there's no room for a docked or floating panel at all —
+ *  the assistant always renders as a full-height bottom drawer. */
+export const ASSISTANT_MOBILE_QUERY = "(max-width: 1023px)"
